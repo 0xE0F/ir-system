@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<history>
+   <processor signature="4.5.2 -O0 -nostartfiles -Map=IRScaner.map -mcpu=cortex-m3 -mthumb -LC:\CooCox\CoIDE\workspace\IRScaner --gc-sections -TC:\CooCox\CoIDE\workspace\IRScaner\link.ld -g">
+      <target file="IRScaner.elf" lastModified="134bd9e80ab">
+         <source file="..\obj\microrl.o" lastModified="134bd9e782f"/>
+         <source file="..\obj\stm32f10x_tim.o" lastModified="134bd9e7948"/>
+         <source file="..\obj\startup_stm32f10x_md_vl.o" lastModified="134bd9e7986"/>
+         <source file="..\obj\core_cm3.o" lastModified="134bd9e79f4"/>
+         <source file="..\obj\API.o" lastModified="134bd9e7a90"/>
+         <source file="..\obj\system_stm32f10x.o" lastModified="134bd9e7aee"/>
+         <source file="..\obj\stm32f10x_gpio.o" lastModified="134bd9e7b7a"/>
+         <source file="..\obj\main.o" lastModified="134bd9e7c17"/>
+         <source file="..\obj\printf.o" lastModified="134bd9e7cb3"/>
+         <source file="..\obj\stm32f10x_rcc.o" lastModified="134bd9e7d4f"/>
+         <source file="..\obj\stm32f10x_exti.o" lastModified="134bd9e7dad"/>
+         <source file="..\obj\stm32f10x_usart.o" lastModified="134bd9e7e49"/>
+         <source file="..\obj\syscalls.o" lastModified="134bd9e7ea7"/>
+         <source file="..\obj\misc.o" lastModified="134bd9e7f34"/>
+      </target>
+   </processor>
+</history>
