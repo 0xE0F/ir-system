@@ -36,11 +36,11 @@
 				<pathentry include="C:/CooCox/CoIDE/gcc/arm-none-eabi/include" kind="inc" path="" system="true"/>
 				<pathentry include="C:/CooCox/CoIDE/gcc/lib/gcc/arm-none-eabi/4.5.2/include" kind="inc" path="" system="true"/>
 				<pathentry include="C:/CooCox/CoIDE/gcc/lib/gcc/arm-none-eabi/4.5.2/include-fixed" kind="inc" path="" system="true"/>
-				<pathentry include="C:/CooCox/CoIDE/workspace/IRScaner" kind="inc" path="" system="true"/>
-				<pathentry include="C:/CooCox/CoIDE/workspace/IRScaner/cmsis" kind="inc" path="" system="true"/>
-				<pathentry include="C:/CooCox/CoIDE/workspace/IRScaner/cmsis_boot" kind="inc" path="" system="true"/>
-				<pathentry include="C:/CooCox/CoIDE/workspace/IRScaner/stm_lib" kind="inc" path="" system="true"/>
-				<pathentry include="C:/CooCox/CoIDE/workspace/IRScaner/stm_lib/inc" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/IRScaner" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/IRScaner/cmsis" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/IRScaner/cmsis_boot" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/IRScaner/stm_lib" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/IRScaner/stm_lib/inc" kind="inc" path="" system="true"/>
 				<pathentry kind="mac" name="__GNUC__" path="" value=""/>
 				<pathentry kind="mac" name="STM32F10X_MD_VL" path="" value=""/>
 				<pathentry kind="mac" name="USE_STDPERIPH_DRIVER" path="" value=""/>

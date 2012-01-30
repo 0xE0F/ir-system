@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "microrl/microrl.h"
-#include "misc.h"
+#include "Terminal.h"
 #include "API.h"
 
 // create microrl object and pointer on it

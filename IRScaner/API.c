@@ -19,6 +19,8 @@ static uint32_t IsCarrierTimerInit = 0;
 
 const uint32_t MaxChannelNumber = 3;
 
+extern signed int printf(const char *pFormat, ...);
+
 TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 TIM_OCInitTypeDef  TIM_OCInitStructure;
 
@@ -101,3 +103,37 @@ static void InitCarrierTimer(void)
 
 	IsCarrierTimerInit = 1;
 }
+
+// Запись кода со сканера
+uint32_t StartRecord(IRCode *irCode)
+{
+
+}
+
+// отладчный вывод кода
+void DebugPrint(IRCode *code)
+{
+	if (!code)
+	{
+		printf("Illegal IRCode pointer\n\r");
+		return;
+	}
+
+	printf("ID: 0x%08X\n\r", code->ID);
+	printf("Frequency: %05d Hz\n\r", code->Frequency);
+	printf("Flags: 0x%04X\n\r", code->Flags);
+	printf("Count: %u\n\r", code->IntervalsCount);
+
+	if (code->IntervalsCount > PULSES_MAX)
+	{
+		printf("Intervals count out if range\n\r");
+		return;
+	}
+
+	for(uint32_t i=0; i < code->IntervalsCount; i++)
+		printf("[%03u] [%02X] [%08u]\n\r", i, code->Intervals[i].Value, code->Intervals[i].Time);
+
+	printf("==>\n\r\n\r");
+}
+
+
