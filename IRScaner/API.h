@@ -5,37 +5,41 @@
 #define _IRDA_API_H_
 
 #define STORAGE_PAGE_SIZE 512
-
+#define INTERVAL_SIZE (4 + 1)
+#define IR_CODE_HEADER_SIZE (4 * 4)
 // Один интервал
 #pragma pack(1)
 typedef struct
 {
-	uint16_t Time;
+	uint32_t Time;
 	uint8_t  Value;
 } Interval;
 
-#define PULSES_MAX 166 //((512 - 4 * 3) / sizeof(OnePulse))
+#define INTERVALS_MAX ((STORAGE_PAGE_SIZE - IR_CODE_HEADER_SIZE) / INTERVAL_SIZE) //
 
 // Хранение кода
 typedef struct
 {
 	uint32_t ID;
+	uint32_t Flags;
 	uint32_t Frequency;
 	uint32_t IntervalsCount;
-	Interval Intervals[PULSES_MAX];
-	uint16_t Flags;
+	Interval Intervals[INTERVALS_MAX];
 } IRCode;
 #pragma pack(0)
 
-#if (PULSES_MAX*3 + 3*4+2) != STORAGE_PAGE_SIZE
+#if (INTERVALS_MAX*INTERVAL_SIZE + IR_CODE_HEADER_SIZE) > STORAGE_PAGE_SIZE
 #error Size of IRCode NOT EQUAL STORAGE_PAGE_SIZE
 #endif
 
+extern const uint32_t MaxChannelNumber;
 
-// Запись кода со сканера
-uint32_t StartRecord(IRCode *irCode);
-// Остановка записи
-uint32_t StopRecord();
+// Сканирование кода
+void Scan(IRCode *irCode);
+// Остановка сканирования
+void StopScan();
+// Производится сканирование
+volatile uint32_t IsScanning();
 
 // Чтение кода из устроства хранениея
 uint32_t ReadCodeFromStorage(IRCode *code, uint32_t id);

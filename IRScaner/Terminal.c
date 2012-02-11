@@ -9,43 +9,37 @@
 #include <Terminal.h>
 #include <API.h>
 
-extern _TimeInterval Intervals[];
-extern uint32_t Index;
-extern uint32_t StopIndex;
-extern uint32_t DetectFreq;
+extern signed int printf(const char *pFormat, ...);
+extern void PrintChar(const char c);
 
-IRCode debugCodes[4];
-
-/*
-AVR platform specific implementation routines (for Atmega8, rewrite for your MC)
-*/
 #define _STM_32_VRESION_ "1.0"
 
 // definition commands word
-#define _CMD_HELP   "help"
-#define _CMD_CLEAR  "clear"
-#define _CMD_SHOW_CNT    "show_cnt"
-#define _CMD_CLR_CNT    "clr_cnt"
-#define _CMD_START    "start"
-#define _CMD_STOP    "stop"
-#define _CMD_PRINT    "print"
+#define _CMD_HELP	"help"
+#define _CMD_CLEAR	"clear"
+#define _CMD_SCAN	"scan"
+#define _CMD_RUN	"run"
 #define _CMD_SET    "set"
+#define _CMD_PRINT  "print"
 
 
-#define _NUM_OF_CMD 8
+
+#define _NUM_OF_CMD 6
 
 //available  commands
-char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_SHOW_CNT, _CMD_CLR_CNT, _CMD_START, _CMD_STOP, _CMD_PRINT, _CMD_SET};
-
+char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_SCAN, _CMD_RUN, _CMD_SET, _CMD_PRINT};
 // array for comletion
 char * compl_world [_NUM_OF_CMD + 1];
 
+
+static IRCode _DebugCodes[4];
+
+static uint32_t const _DebugCodesCount = sizeof(_DebugCodes) / sizeof(_DebugCodes[0]);
 
 
 //*****************************************************************************
 void print (char * str)
 {
-
 	int i = 0;
 	while (str [i] != 0) {
 		PrintChar(str[i++]);
@@ -56,7 +50,6 @@ void print (char * str)
 char get_char (void)
 {
 	while( USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET) ;
-
 	return USART_ReceiveData(USART1);
 }
 
@@ -64,9 +57,11 @@ char get_char (void)
 void print_help (void)
 {
 	print ("Use TAB key for completion\n\rCommand:\n\r");
-	print ("\tclear               - clear screen\n\r");
-	print ("\tshow_cnt   - Show CNT value\n\r");
-	print ("\tclr_cnt    - Clear CNT value\n\r");
+	print ("\tscan n	- scanning ir code and stre to debug storage with number n\n\r");
+	print ("\trun [code] [channel]	- send stored [code] to [channel]\n\r");
+	print ("\tset frequency	- set carier frequency\n\r");
+	print ("\tprint	[code] - print debug output [code]\n\r");
+	print ("\tclear - clear display\n\r");
 }
 
 
@@ -76,8 +71,7 @@ void print_help (void)
 int execute (int argc, const char * const * argv)
 {
 	int i = 0;
-	int ind = 0;
-	uint32_t freq = 0;
+	uint32_t arg = 0;
 	// just iterate through argv word and compare it with your commands
 	while (i < argc) {
 		if (strcmp (argv[i], _CMD_HELP) == 0) {
@@ -92,76 +86,54 @@ int execute (int argc, const char * const * argv)
 		else if (strcmp (argv[i], _CMD_CLEAR) == 0) {
 			print ("\033[2J");    // ESC seq for clear entire screen
 			print ("\033[H");     // ESC seq for move cursor at left-top corner
-		} else if (strcmp (argv[i], _CMD_SHOW_CNT) == 0)
-		{
-			return 0;
 		}
-		else if (strcmp (argv[i], _CMD_CLR_CNT) == 0)
+		else if (strcmp (argv[i], _CMD_SCAN) == 0)
 		{
-			for (ind = 0; ind < MaxIntervals; ind++)
+			if (++i < argc)
 			{
-				Intervals[ind].Time = 0;
-				Intervals[ind].Value = 0;
+				arg = atoi(argv[i]);
+				if (arg >= _DebugCodesCount)
+				{
+					print("Code out of range\n\r");
+					return -1;
+				}
+				Scan(&_DebugCodes[arg]);
+				print("Scanning ...\n\r");
+				while(IsScanning()) { ; }
+				DebugPrint(&_DebugCodes[arg]);
+				return 0;
 			}
-			return 0;
-		}
-		else if (strcmp (argv[i], _CMD_START) == 0)
-		{
-			StartRecord(debugCodes);
-//			Index = 0;
-//			StopIndex = 0;
-//			DetectFreq = 0;
-//			Intervals[Index++].Value  = (GPIOC->IDR & GPIO_Pin_0);
-//			TIM_Cmd(TIM2, DISABLE);
-//			/* TIM enable counter */
-//			TIM_Cmd(TIM3, ENABLE);
-
-//			NVIC_EnableIRQ(EXTI0_IRQn);
-			print("Start ...\n\r");
-
-			return 0;
-		}
-		else if (strcmp (argv[i], _CMD_STOP) == 0)
-		{
-//			NVIC_DisableIRQ(EXTI0_IRQn);
-//			TIM_Cmd(TIM2, DISABLE);
-//			TIM_Cmd(TIM3, DISABLE);
-
-//			if (Index >= MaxIntervals)
-//			{
-//				print("Error: Index > MaxIntervals\n\r");
-//				return 1;
-//			}
-//			for (ind = 0; ind < Index; ind++)
-//				printf("[%03d] Value: %d, Time: %d\n\r", ind, Intervals[ind].Value, Intervals[ind].Time);
-
-//			printf("Freq: %d\n\r", DetectFreq);
-			DebugPrint(debugCodes);
-			return 0;
-		}
-		else if (strcmp (argv[i], _CMD_PRINT) == 0)
-		{
-			if (Index >= MaxIntervals)
+			else
 			{
-				print("Error: Index > MaxIntervals\n\r");
-				return 1;
+				print("Code number not found\n\r");
+				return -1;
 			}
-			for (ind = 0; ind < Index; ind++)
-				printf("[%03d] Value: %d, Time: %d\n\r", ind, Intervals[ind].Value, Intervals[ind].Time);
+		} else if (strcmp (argv[i], _CMD_PRINT) == 0)
+		{
+			if (++i < argc)
+			{
+				arg = atoi (argv[i]);
+				if (arg > (_DebugCodesCount-1))
+				{
+					print("Code number out of range\n\r");
+					return -1;
+				}
+			}
+			DebugPrint(&(_DebugCodes[arg]));
 			return 0;
 		} else if (strcmp (argv[i], _CMD_SET) == 0)
 		{
 			if (++i < argc)
 			{
-				freq = atoi (argv[i]);
-				freq = GetFrequencyInterval(freq);
-				if (freq == 0)
+				arg = atoi (argv[i]);
+				arg = GetFrequencyInterval(arg);
+				if (arg == 0)
 				{
 					print("Frequency out of range\n\r");
 					return -1;
 				}
-				printf("SetFrequency [%d]\n\r", freq);
-				SetCarrierFrequency(freq);
+				printf("SetFrequency [%d]\n\r", (unsigned int)arg);
+				SetCarrierFrequency(arg);
 				return 0;
 			}
 			else

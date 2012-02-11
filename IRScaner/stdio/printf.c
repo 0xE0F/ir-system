@@ -16,7 +16,7 @@
  * @param  pStr	Storage string.
  * @param  c    Character to write.
  */
-void PrintChar(char c)
+void PrintChar(const char c)
 {
 	/* Send a char like: 
 	   while(Transfer not completed);
