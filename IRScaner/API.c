@@ -34,16 +34,12 @@ static __IO uint32_t _IsScanning = 0;
 
 static __IO uint32_t _CurrentTime = 0;		// Текущее время
 static const uint32_t TimeToStop = 5000000; // Время принудительной остановки, мкс
-static const uint32_t TimeIncrement = 0xFFFF / 1000000; // Размер интервала: Разрядность регистра 16 бит / таймер включен ан период в 1 мкс.
+static const uint32_t TimeIncrement = 0xFFFF; // таймер включен на период в 1 мкс.
 
-static __IO uint16_t IC2Value = 0;
-static __IO uint16_t DutyCycle = 0;
-static __IO uint32_t Frequency = 0;
-static __IO uint32_t DetectFreq = 0;
-
-static __IO uint8_t _SilentCounter = 0;			// Счетчик интервал тишины
-static const uint8_t SilentDetectFactor = 15;  // Коэффициент при котором считается что далее сигнала нет
-static __IO uint32_t _SilentStartIndex = 0; // Индекс с которого зафиксирована тишина
+static __IO uint16_t _IC2Value = 0;
+static __IO uint16_t _DutyCycle = 0;
+static __IO uint32_t _SharedFrequency = 0;
+static __IO uint32_t _DetectFrequency = 0;
 
 // Инициализация несущего генератора
 static void InitCarrierTimer(void);
@@ -57,8 +53,37 @@ extern signed int printf(const char *pFormat, ...);
 
 #define GET_IR_DATA_BIT (GPIOC->IDR & GPIO_Pin_0)
 
+inline void SetTime(uint32_t *interval, const uint32_t time);
+inline void SetValue(uint32_t *interval, const uint8_t value);
+inline uint32_t GetTime(uint32_t interval);
+inline uint8_t GetValue(uint32_t interval);
+
+const uint32_t TimeMask = 0x7FFFFFFF;
+const uint32_t ValueMask = 0x80000000;
+
 TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 TIM_OCInitTypeDef  TIM_OCInitStructure;
+
+inline void SetTime(uint32_t *interval, const uint32_t time)
+{
+	(*interval) &= ~TimeMask;
+	(*interval) = (*interval | (time & TimeMask));
+}
+
+inline void SetValue(uint32_t *interval, const uint8_t value)
+{
+	(*interval) = (value > 0) ? (*interval | ValueMask) : (*interval & (~ValueMask));
+}
+
+inline uint32_t GetTime(uint32_t interval)
+{
+	return interval & TimeMask;
+}
+
+inline uint8_t GetValue(uint32_t interval)
+{
+	return (interval & ValueMask) == ValueMask;
+}
 
 // Получение стандартной частоты из интервала 30 кГц - 60 кГц
 // 0 - вне диапазона
@@ -238,11 +263,16 @@ void Scan(IRCode *irCode)
 	_WorkCode = irCode;
 	_WorkCode->Frequency = 0;
 	_WorkCode->IntervalsCount = 0;
-	_WorkCode->Intervals[_WorkCode->IntervalsCount++].Value = GET_IR_DATA_BIT;
+	SetValue(&(_WorkCode->Intervals[_WorkCode->IntervalsCount]), GET_IR_DATA_BIT);
 	_CurrentTime = 0;
-	_SilentCounter = 0;
-	_SilentStartIndex = 0;
 	_IsScanning = 1;
+	_DetectFrequency = 0;
+
+	TIM_ClearITPendingBit(TIM3, TIM_IT_CC2);
+	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+	TIM2->CNT = 0;
+	TIM3->CNT = 0;
+	EXTI_ClearITPendingBit(EXTI_Line0);
 
 	TIM_Cmd(TIM2, DISABLE);
 	TIM_Cmd(TIM3, ENABLE);
@@ -257,7 +287,7 @@ void StopScan()
 	TIM_Cmd(TIM3, DISABLE);
 	if (_WorkCode)
 	{
-		_WorkCode->Frequency = GetFrequencyInterval(DetectFreq);
+		_WorkCode->Frequency = GetFrequencyInterval(_DetectFrequency);
 	}
 	_IsScanning = 0;
 }
@@ -272,49 +302,46 @@ void EXTI0_IRQHandler()
 	TIM_Cmd(TIM2, DISABLE);
 	if (_WorkCode)
 	{
-		uint32_t intervalsCount = _WorkCode->IntervalsCount;
-		_WorkCode->Intervals[intervalsCount-1].Time = TIM2->CNT;
-		_WorkCode->Intervals[intervalsCount++].Value = GET_IR_DATA_BIT;
-		_WorkCode->IntervalsCount = intervalsCount;
+		uint32_t index = _WorkCode->IntervalsCount;
+		uint32_t timeout = (uint32_t)(TIM2->CNT);
+		uint32_t time = GetTime(_WorkCode->Intervals[index]);
+//		_WorkCode->Intervals[_WorkCode->IntervalsCount].Time += timeout;
+//		_WorkCode->IntervalsCount++;
+//		_WorkCode->Intervals[_WorkCode->IntervalsCount].Time = 0;
+//		_WorkCode->Intervals[_WorkCode->IntervalsCount].Value = GET_IR_DATA_BIT;
+		SetTime( &(_WorkCode->Intervals[index]),time+timeout);
+		index++;
+		SetTime( &(_WorkCode->Intervals[index]), 0);
+		SetValue( &(_WorkCode->Intervals[index]), GET_IR_DATA_BIT);
+		_WorkCode->IntervalsCount = index;
 		TIM2->CNT =0;
+		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 		TIM_Cmd(TIM2, ENABLE);
-		if (intervalsCount >= INTERVALS_MAX)
+		_CurrentTime += timeout;
+		if ((_CurrentTime > TimeToStop) || (_WorkCode->IntervalsCount >= INTERVALS_MAX))
 		{
 			StopScan();
 		}
-		_SilentCounter = 0;
 	}
 	EXTI_ClearITPendingBit(EXTI_Line0);
 }
 
 void TIM2_IRQHandler()
 {
+	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 	if (_WorkCode)
 	{
-		uint32_t intervalsCount = _WorkCode->IntervalsCount;
-		_WorkCode->Intervals[intervalsCount-1].Time = 0xFFFF;
-		_WorkCode->Intervals[intervalsCount].Value = _WorkCode->Intervals[intervalsCount-1].Value;
-		intervalsCount++;
-		_WorkCode->IntervalsCount = intervalsCount;
+		uint32_t time = GetTime(_WorkCode->Intervals[_WorkCode->IntervalsCount]);
+		time+= UINT16_MAX;
+		SetTime(&(_WorkCode->Intervals[_WorkCode->IntervalsCount]), time);
+		//_WorkCode->Intervals[_WorkCode->IntervalsCount].Time += UINT16_MAX;
 
 		_CurrentTime += TimeIncrement;
-		if ((_CurrentTime > TimeToStop) || (intervalsCount >= INTERVALS_MAX))
+		if ((_CurrentTime > TimeToStop) || (_WorkCode->IntervalsCount >= INTERVALS_MAX))
 		{
 			StopScan();
 		}
-
-//		if (_SilentCounter >= SilentDetectFactor)
-//		{
-//			_WorkCode->IntervalsCount = SilentDetectFactor;
-//			StopScan();
-//		}
-		if (_SilentCounter == 0)
-		{
-			_SilentStartIndex = intervalsCount;
-		}
-		_SilentCounter++;
 	}
-	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 }
 
 void TIM3_IRQHandler(void)
@@ -323,24 +350,24 @@ void TIM3_IRQHandler(void)
   TIM_ClearITPendingBit(TIM3, TIM_IT_CC2);
 
   /* Get the Input Capture value */
-  IC2Value = TIM_GetCapture2(TIM3);
+  _IC2Value = TIM_GetCapture2(TIM3);
 
-  if (IC2Value != 0)
+  if (_IC2Value != 0)
   {
     /* Duty cycle computation */
-    DutyCycle = (TIM_GetCapture1(TIM3) * 100) / IC2Value;
+    _DutyCycle = (TIM_GetCapture1(TIM3) * 100) / _IC2Value;
 
     /* Frequency computation */
-    Frequency = SystemCoreClock / IC2Value;
-    if ((Frequency > DetectFreqMin) && (Frequency < DetectFreqMax))
+    _SharedFrequency = SystemCoreClock / _IC2Value;
+    if ((_SharedFrequency > DetectFreqMin) && (_SharedFrequency < DetectFreqMax))
     {
-    	DetectFreq = Frequency;
+    	_DetectFrequency = _SharedFrequency;
     }
   }
   else
   {
-    DutyCycle = 0;
-    Frequency = 0;
+    _DutyCycle = 0;
+    _SharedFrequency = 0;
   }
 }
 
@@ -365,8 +392,10 @@ void DebugPrint(IRCode *code)
 	}
 
 	for(uint32_t i=0; i < code->IntervalsCount; i++)
-		printf("[%03u] [%02X] [%08u]\n\r", (unsigned int)i, (unsigned char)(code->Intervals[i].Value), (unsigned short)(code->Intervals[i].Time));
-
+	{
+//		printf("[%03u] [%02X] [%u]\n\r", (unsigned int)i, (unsigned char)(code->Intervals[i].Value), (unsigned int)(code->Intervals[i].Time));
+		printf("[%03u] [%02X] [%u]\n\r", (unsigned int)i, (unsigned char)GetValue(code->Intervals[i]), (unsigned int)GetTime(code->Intervals[i]));
+	}
 	printf("==>\n\r\n\r");
 }
 

@@ -32,7 +32,7 @@ char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_SCAN, _CMD_RUN, _CMD_SET, _CMD
 char * compl_world [_NUM_OF_CMD + 1];
 
 
-static IRCode _DebugCodes[4];
+static IRCode _DebugCodes[2];
 
 static uint32_t const _DebugCodesCount = sizeof(_DebugCodes) / sizeof(_DebugCodes[0]);
 

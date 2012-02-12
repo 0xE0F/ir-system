@@ -56,10 +56,10 @@
       <compilerarg value="-mthumb"/>
       <compilerarg value="-Wall"/>      
       <compilerarg value="-ffunction-sections"/>
-      <compilerarg value="-O0"/>
       
       <compilerarg value="-std=c99"/>
       <compilerarg value="-w9"/>
+      <compilerarg value="-O1"/>
       <compilerarg value="-g"/>
       
       <!-- arm-none-eabi-gcc linker arguments -->

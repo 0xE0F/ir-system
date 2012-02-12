@@ -4,8 +4,8 @@
 #ifndef _IRDA_API_H_
 #define _IRDA_API_H_
 
-#define STORAGE_PAGE_SIZE 512
-#define INTERVAL_SIZE (4 + 1)
+#define STORAGE_PAGE_SIZE 2048
+#define INTERVAL_SIZE (4)
 #define IR_CODE_HEADER_SIZE (4 * 4)
 // Один интервал
 #pragma pack(1)
@@ -24,7 +24,8 @@ typedef struct
 	uint32_t Flags;
 	uint32_t Frequency;
 	uint32_t IntervalsCount;
-	Interval Intervals[INTERVALS_MAX];
+	uint32_t Intervals[INTERVALS_MAX];
+	//Interval Intervals[INTERVALS_MAX];
 } IRCode;
 #pragma pack(0)
 
