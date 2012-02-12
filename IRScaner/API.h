@@ -7,9 +7,10 @@
 #define STORAGE_PAGE_SIZE 2048
 #define INTERVAL_SIZE (4)
 #define IR_CODE_HEADER_SIZE (4 * 4)
-#pragma pack(1)
 
 #define INTERVALS_MAX ((STORAGE_PAGE_SIZE - IR_CODE_HEADER_SIZE) / INTERVAL_SIZE) // Максимальное количество интервалов
+
+#pragma pack(1)
 
 // Хранение кода
 typedef struct
@@ -20,13 +21,17 @@ typedef struct
 	uint32_t IntervalsCount;
 	uint32_t Intervals[INTERVALS_MAX];	// Интрвал - старший бит - значение уровня, остальные - время в мкс
 } IRCode;
+
 #pragma pack(0)
 
 #if (INTERVALS_MAX*INTERVAL_SIZE + IR_CODE_HEADER_SIZE) > STORAGE_PAGE_SIZE
 #error Size of IRCode NOT EQUAL STORAGE_PAGE_SIZE
 #endif
 
+// Максимальный номер канала
 extern const uint32_t MaxChannelNumber;
+
+typedef enum {StatusCode_Ok = 0, StatusCode_NullArgumentReference = 1, StatusCode_ArgumentOutOfRange = 2, StatusCode_Busy = 3, StatusCode_InternalError = 4} StatusCode;
 
 // Сканирование кода
 void Scan(IRCode *irCode);
@@ -43,7 +48,7 @@ uint32_t WriteCodeToStorage(IRCode *code, uint32_t id);
 // Выдача кода в соответствующий канал
 // 0 - принято в очередь
 // 1 - ошибка (код не найден или неизвесный номер канала)
-uint32_t WriteToChannel(IRCode *code, uint32_t channelID);
+StatusCode SendCodeToChannel(IRCode *code, uint32_t channelID);
 
 // Получение стандартной частоты из интервала 30 кГц - 60 кГц
 // 0 - если частота вне диапазона
@@ -54,5 +59,8 @@ void SetCarrierFrequency(const uint32_t value);
 
 // отладчный вывод кода
 void DebugPrint(IRCode *code);
+
+// Инициализация выходого канала
+void SetOutValueToChannel(const uint32_t channelId, const uint8_t value);
 
 #endif // _IRDA_API_H_

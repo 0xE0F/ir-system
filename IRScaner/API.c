@@ -20,17 +20,28 @@ static const uint32_t StandartFrequencyCount = sizeof(StandartFrequency) / sizeo
 // Флаги инициализации устройств
 static uint32_t _InitFlags = 0;
 // Флаг инициализации несущего генератора
-static const uint32_t IsCarrierTimerInit = 1;
+static const uint32_t IsCarrierTimerInit = 0x1;
 // Флаг инициализации несущего генератора
-static const uint32_t IsWorkTimersInit = 2;
+static const uint32_t IsWorkTimersInit = 0x2;
 // Флаг инициализации внешних прерываний
-static const uint32_t IsEXTIInit = 4;
+static const uint32_t IsEXTIInit = 0x4;
+// Флаг инициализации выходного таймера
+static const uint32_t IsOutputTimerInit = 0x8;
+// Флаг инициализации выходных каналов
+static const uint32_t IsOutputChannelInit = 0x10;
 
 // Максимальный номер канала
 const uint32_t MaxChannelNumber = 3;
 
-static IRCode *_WorkCode = NULL;
+static IRCode *_ScanningCode = NULL;
+static IRCode *_SendingCode = NULL;
+
+// Флаг процесса сканирования
 static __IO uint32_t _IsScanning = 0;
+// Флаг процесса отправки кода
+static __IO uint32_t _IsSending = 0;
+
+static __IO uint32_t _SendIndex = 0;
 
 static __IO uint32_t _CurrentTime = 0;		// Текущее время
 static const uint32_t TimeToStop = 5000000; // Время принудительной остановки, мкс
@@ -41,6 +52,10 @@ static __IO uint16_t _DutyCycle = 0;
 static __IO uint32_t _SharedFrequency = 0;
 static __IO uint32_t _DetectFrequency = 0;
 
+// Струтуры настройки таймера на захват длительности импульсов
+TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+TIM_OCInitTypeDef  TIM_OCInitStructure;
+
 // Инициализация несущего генератора
 static void InitCarrierTimer(void);
 // Инициализация рабочих таймеров
@@ -48,21 +63,36 @@ static void InitWorkTimers(void);
 // Инициализация внешних прерываний
 static void InitEXTI(void);
 
-extern signed int printf(const char *pFormat, ...);
-
-
 #define GET_IR_DATA_BIT (GPIOC->IDR & GPIO_Pin_0)
 
-inline void SetTime(uint32_t *interval, const uint32_t time);
-inline void SetValue(uint32_t *interval, const uint8_t value);
-inline uint32_t GetTime(uint32_t interval);
-inline uint8_t GetValue(uint32_t interval);
+#define CHANNEL_0_PIN_NUMBER (GPIO_Pin_6)
+#define CHANNEL_1_PIN_NUMBER (GPIO_Pin_7)
+#define CHANNEL_2_PIN_NUMBER (GPIO_Pin_8)
+#define CHANNEL_3_PIN_NUMBER (GPIO_Pin_9)
 
+#define CHANNELS_PORT GPIOC
+
+//Установка значения времени
+inline void SetTime(uint32_t *interval, const uint32_t time);
+// Установка значения интервала
+inline void SetValue(uint32_t *interval, const uint8_t value);
+// Получение значения времени интервала
+inline uint32_t GetTime(uint32_t interval);
+// Получение значения интервала
+inline uint8_t GetValue(uint32_t interval);
+// Маска времени
 const uint32_t TimeMask = 0x7FFFFFFF;
+// Маска значения
 const uint32_t ValueMask = 0x80000000;
 
-TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
-TIM_OCInitTypeDef  TIM_OCInitStructure;
+// Установка таймаута на выходном таймере
+static void SetTimeoutToOutTimer(uint32_t value);
+// Получение первого не пустого значения в спске интервалов
+static uint32_t GetFirstNonEmptyIndex(const IRCode *code);
+// Инициализация выходных каналов
+static void InitOuputChannel(void);
+
+extern signed int printf(const char *pFormat, ...);
 
 inline void SetTime(uint32_t *interval, const uint32_t time)
 {
@@ -259,10 +289,10 @@ void Scan(IRCode *irCode)
 	if (irCode == NULL)
 		return;
 
-	_WorkCode = irCode;
-	_WorkCode->Frequency = 0;
-	_WorkCode->IntervalsCount = 0;
-	SetValue(&(_WorkCode->Intervals[_WorkCode->IntervalsCount]), GET_IR_DATA_BIT);
+	_ScanningCode = irCode;
+	_ScanningCode->Frequency = 0;
+	_ScanningCode->IntervalsCount = 0;
+	SetValue(&(_ScanningCode->Intervals[_ScanningCode->IntervalsCount]), GET_IR_DATA_BIT);
 	_CurrentTime = 0;
 	_IsScanning = 1;
 	_DetectFrequency = 0;
@@ -284,11 +314,11 @@ void StopScan()
 	NVIC_DisableIRQ(EXTI0_IRQn);
 	TIM_Cmd(TIM2, DISABLE);
 	TIM_Cmd(TIM3, DISABLE);
-	if (_WorkCode)
+	if (_ScanningCode)
 	{
-		_WorkCode->Frequency = GetFrequencyInterval(_DetectFrequency);
+		_ScanningCode->Frequency = GetFrequencyInterval(_DetectFrequency);
 	}
-	_WorkCode = NULL;
+	_ScanningCode = NULL;
 	_IsScanning = 0;
 }
 
@@ -300,22 +330,22 @@ volatile uint32_t IsScanning()
 void EXTI0_IRQHandler()
 {
 	TIM_Cmd(TIM2, DISABLE);
-	if (_WorkCode)
+	if (_ScanningCode)
 	{
-		uint32_t index = _WorkCode->IntervalsCount;
+		uint32_t index = _ScanningCode->IntervalsCount;
 		uint32_t timeout = (uint32_t)(TIM2->CNT);
-		uint32_t time = GetTime(_WorkCode->Intervals[index]);
+		uint32_t time = GetTime(_ScanningCode->Intervals[index]);
 
-		SetTime( &(_WorkCode->Intervals[index++]),time+timeout);
-		SetTime( &(_WorkCode->Intervals[index]), 0);
-		SetValue( &(_WorkCode->Intervals[index]), GET_IR_DATA_BIT);
-		_WorkCode->IntervalsCount = index;
+		SetTime( &(_ScanningCode->Intervals[index++]),time+timeout);
+		SetTime( &(_ScanningCode->Intervals[index]), 0);
+		SetValue( &(_ScanningCode->Intervals[index]), GET_IR_DATA_BIT);
+		_ScanningCode->IntervalsCount = index;
 
 		TIM2->CNT =0;
 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 		TIM_Cmd(TIM2, ENABLE);
 		_CurrentTime += timeout;
-		if ((_CurrentTime > TimeToStop) || (_WorkCode->IntervalsCount >= INTERVALS_MAX))
+		if ((_CurrentTime > TimeToStop) || (_ScanningCode->IntervalsCount >= INTERVALS_MAX))
 		{
 			StopScan();
 		}
@@ -326,12 +356,12 @@ void EXTI0_IRQHandler()
 void TIM2_IRQHandler()
 {
 	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-	if (_WorkCode)
+	if (_ScanningCode)
 	{
-		uint32_t time = GetTime(_WorkCode->Intervals[_WorkCode->IntervalsCount]);
-		SetTime(&(_WorkCode->Intervals[_WorkCode->IntervalsCount]), time + UINT16_MAX);
+		uint32_t time = GetTime(_ScanningCode->Intervals[_ScanningCode->IntervalsCount]);
+		SetTime(&(_ScanningCode->Intervals[_ScanningCode->IntervalsCount]), time + UINT16_MAX);
 		_CurrentTime += TimeIncrement;
-		if ((_CurrentTime > TimeToStop) || (_WorkCode->IntervalsCount >= INTERVALS_MAX))
+		if ((_CurrentTime > TimeToStop) || (_ScanningCode->IntervalsCount >= INTERVALS_MAX))
 		{
 			StopScan();
 		}
@@ -392,4 +422,104 @@ void DebugPrint(IRCode *code)
 	printf("==>\n\r\n\r");
 }
 
+static void InitOuputChannel(void)
+{
+	GPIO_InitTypeDef  GPIO_InitStructure;
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 
+	GPIO_StructInit(&GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin = CHANNEL_0_PIN_NUMBER | CHANNEL_1_PIN_NUMBER | CHANNEL_2_PIN_NUMBER | CHANNEL_3_PIN_NUMBER;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(CHANNELS_PORT, &GPIO_InitStructure);
+
+	_InitFlags |= IsOutputChannelInit;
+}
+
+// Выдача кода в соответствующий канал
+// 0 - принято в очередь
+// !0 - код ошибки (код не найден или неизвесный номер канала)
+StatusCode SendCodeToChannel(IRCode *code, uint32_t channelID)
+{
+	#warning "Queue not implemented"
+
+	if ((_InitFlags & IsOutputChannelInit) != IsOutputChannelInit)
+		InitOuputChannel();
+
+	if (_IsSending)
+		return StatusCode_Busy;
+	if (!code)
+		return StatusCode_NullArgumentReference;
+	if (channelID > MaxChannelNumber)
+		return StatusCode_ArgumentOutOfRange;
+
+	_SendingCode = code;
+	_SendIndex = GetFirstNonEmptyIndex(_SendingCode);
+	if (_SendIndex >= _SendingCode->IntervalsCount)
+		return StatusCode_InternalError;
+
+	SetOutValueToChannel(channelID, GetValue(_SendingCode->Intervals[_SendIndex]));
+	SetTimeoutToOutTimer(GetTime(_SendingCode->Intervals[_SendIndex]));
+
+	_IsSending = 1;
+	return StatusCode_Ok;
+}
+
+uint32_t GetFirstNonEmptyIndex(const IRCode *code)
+{
+	return code->IntervalsCount;
+}
+
+void SetTimeoutToOutTimer(uint32_t value)
+{
+}
+
+void SetOutValueToChannel(const uint32_t channelId, const uint8_t value)
+{
+	#warning When you fix me ?
+
+	if (channelId == 0)
+	{
+		if (value)
+		{
+			CHANNELS_PORT->BSRR |= CHANNEL_0_PIN_NUMBER;
+		}
+		else
+		{
+			CHANNELS_PORT->BRR |= CHANNEL_0_PIN_NUMBER;
+		}
+	}
+	if (channelId == 1)
+	{
+		if (value)
+		{
+			CHANNELS_PORT->BSRR |= CHANNEL_1_PIN_NUMBER;
+		}
+		else
+		{
+			CHANNELS_PORT->BRR |= CHANNEL_1_PIN_NUMBER;
+		}
+	}
+	if (channelId == 2)
+	{
+		if (value)
+		{
+			CHANNELS_PORT->BSRR |= CHANNEL_2_PIN_NUMBER;
+		}
+		else
+		{
+			CHANNELS_PORT->BRR |= CHANNEL_2_PIN_NUMBER;
+		}
+	}
+	if (channelId == 3)
+	{
+		if (value)
+		{
+			CHANNELS_PORT->BSRR |= CHANNEL_3_PIN_NUMBER;
+		}
+		else
+		{
+			CHANNELS_PORT->BRR |= CHANNEL_3_PIN_NUMBER;
+		}
+	}
+}

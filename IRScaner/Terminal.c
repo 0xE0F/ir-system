@@ -21,13 +21,14 @@ extern void PrintChar(const char c);
 #define _CMD_RUN	"run"
 #define _CMD_SET    "set"
 #define _CMD_PRINT  "print"
+#define _CMD_PIN    "pin"
 
 
 
-#define _NUM_OF_CMD 6
+#define _NUM_OF_CMD 7
 
 //available  commands
-char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_SCAN, _CMD_RUN, _CMD_SET, _CMD_PRINT};
+char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_SCAN, _CMD_RUN, _CMD_SET, _CMD_PRINT, _CMD_PIN};
 // array for comletion
 char * compl_world [_NUM_OF_CMD + 1];
 
@@ -71,7 +72,7 @@ void print_help (void)
 int execute (int argc, const char * const * argv)
 {
 	int i = 0;
-	uint32_t arg = 0;
+	uint32_t arg = 0, arg2 = 0;
 	// just iterate through argv word and compare it with your commands
 	while (i < argc) {
 		if (strcmp (argv[i], _CMD_HELP) == 0) {
@@ -108,6 +109,36 @@ int execute (int argc, const char * const * argv)
 				print("Code number not found\n\r");
 				return -1;
 			}
+		} else if (strcmp (argv[i], _CMD_PIN) == 0)
+		{
+			if (++i < argc)
+			{
+				arg = atoi (argv[i]);
+				if (arg > MaxChannelNumber)
+				{
+					print("Pin number out of range\n\r");
+					return -1;
+				}
+
+				if (++i < argc)
+				{
+					arg2 = atoi (argv[i]);
+				}
+				else
+				{
+					printf("Value not found\n\r");
+					return -1;
+				}
+				SendCodeToChannel(NULL, 0); //
+				SetOutValueToChannel(arg, arg2 > 0 ? 1 : 0);
+				return 0;
+
+			} else
+			{
+				print("Pin number not found\n\r");
+				return -1;
+			}
+
 		} else if (strcmp (argv[i], _CMD_PRINT) == 0)
 		{
 			if (++i < argc)
