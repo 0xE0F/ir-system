@@ -7,15 +7,9 @@
 #define STORAGE_PAGE_SIZE 2048
 #define INTERVAL_SIZE (4)
 #define IR_CODE_HEADER_SIZE (4 * 4)
-// Один интервал
 #pragma pack(1)
-typedef struct
-{
-	uint32_t Time;
-	uint8_t  Value;
-} Interval;
 
-#define INTERVALS_MAX ((STORAGE_PAGE_SIZE - IR_CODE_HEADER_SIZE) / INTERVAL_SIZE) //
+#define INTERVALS_MAX ((STORAGE_PAGE_SIZE - IR_CODE_HEADER_SIZE) / INTERVAL_SIZE) // Максимальное количество интервалов
 
 // Хранение кода
 typedef struct
@@ -24,8 +18,7 @@ typedef struct
 	uint32_t Flags;
 	uint32_t Frequency;
 	uint32_t IntervalsCount;
-	uint32_t Intervals[INTERVALS_MAX];
-	//Interval Intervals[INTERVALS_MAX];
+	uint32_t Intervals[INTERVALS_MAX];	// Интрвал - старший бит - значение уровня, остальные - время в мкс
 } IRCode;
 #pragma pack(0)
 

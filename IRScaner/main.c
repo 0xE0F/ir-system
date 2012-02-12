@@ -19,9 +19,7 @@ static void InitUART(uint32_t baudrate);
 
 int main(void)
 {
-//	SystemInit();
 	InitUART(115200);
-//	SetCarrierFrequency(36000);
 
 	// call init with ptr to microrl instance and print callback
 	microrl_init (prl, print);

@@ -234,7 +234,6 @@ static void InitEXTI(void)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-//	NVIC_EnableIRQ(EXTI0_IRQn);
 	NVIC_SetPriority(EXTI0_IRQn, 1);
 
 	EXTI_InitTypeDef EXTI_InitStructure;
@@ -289,6 +288,7 @@ void StopScan()
 	{
 		_WorkCode->Frequency = GetFrequencyInterval(_DetectFrequency);
 	}
+	_WorkCode = NULL;
 	_IsScanning = 0;
 }
 
@@ -305,15 +305,12 @@ void EXTI0_IRQHandler()
 		uint32_t index = _WorkCode->IntervalsCount;
 		uint32_t timeout = (uint32_t)(TIM2->CNT);
 		uint32_t time = GetTime(_WorkCode->Intervals[index]);
-//		_WorkCode->Intervals[_WorkCode->IntervalsCount].Time += timeout;
-//		_WorkCode->IntervalsCount++;
-//		_WorkCode->Intervals[_WorkCode->IntervalsCount].Time = 0;
-//		_WorkCode->Intervals[_WorkCode->IntervalsCount].Value = GET_IR_DATA_BIT;
-		SetTime( &(_WorkCode->Intervals[index]),time+timeout);
-		index++;
+
+		SetTime( &(_WorkCode->Intervals[index++]),time+timeout);
 		SetTime( &(_WorkCode->Intervals[index]), 0);
 		SetValue( &(_WorkCode->Intervals[index]), GET_IR_DATA_BIT);
 		_WorkCode->IntervalsCount = index;
+
 		TIM2->CNT =0;
 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 		TIM_Cmd(TIM2, ENABLE);
@@ -332,10 +329,7 @@ void TIM2_IRQHandler()
 	if (_WorkCode)
 	{
 		uint32_t time = GetTime(_WorkCode->Intervals[_WorkCode->IntervalsCount]);
-		time+= UINT16_MAX;
-		SetTime(&(_WorkCode->Intervals[_WorkCode->IntervalsCount]), time);
-		//_WorkCode->Intervals[_WorkCode->IntervalsCount].Time += UINT16_MAX;
-
+		SetTime(&(_WorkCode->Intervals[_WorkCode->IntervalsCount]), time + UINT16_MAX);
 		_CurrentTime += TimeIncrement;
 		if ((_CurrentTime > TimeToStop) || (_WorkCode->IntervalsCount >= INTERVALS_MAX))
 		{
@@ -393,8 +387,7 @@ void DebugPrint(IRCode *code)
 
 	for(uint32_t i=0; i < code->IntervalsCount; i++)
 	{
-//		printf("[%03u] [%02X] [%u]\n\r", (unsigned int)i, (unsigned char)(code->Intervals[i].Value), (unsigned int)(code->Intervals[i].Time));
-		printf("[%03u] [%02X] [%u]\n\r", (unsigned int)i, (unsigned char)GetValue(code->Intervals[i]), (unsigned int)GetTime(code->Intervals[i]));
+		printf("[%03u] %01X -> [%08u us]\n\r", (unsigned int)i, (unsigned char)GetValue(code->Intervals[i]), (unsigned int)GetTime(code->Intervals[i]));
 	}
 	printf("==>\n\r\n\r");
 }
