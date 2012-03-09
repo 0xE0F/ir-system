@@ -41,7 +41,14 @@ static __IO uint32_t _IsScanning = 0;
 // Флаг процесса отправки кода
 static __IO uint32_t _IsSending = 0;
 
-static __IO uint32_t _SendIndex = 0;
+// Текущий отправляемый интервал
+static __IO uint32_t _SendingIndex = 0;
+// остаток интервала
+static __IO uint32_t _SendingTime = 0;
+// Текущий отправляемый канал
+static uint8_t _SendingChannel = ~0;
+// Максимальное значение таймаута для отправляемого кода
+static const uint32_t OutTimeoutMax = 0x0000FFFF;
 
 static __IO uint32_t _CurrentTime = 0;		// Текущее время
 static const uint32_t TimeToStop = 5000000; // Время принудительной остановки, мкс
@@ -57,13 +64,13 @@ TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 TIM_OCInitTypeDef  TIM_OCInitStructure;
 
 // Инициализация несущего генератора
-static void InitCarrierTimer(void);
+static void InitCarrierTimer(void); //TIM4
 // Инициализация рабочих таймеров
-static void InitWorkTimers(void);
+static void InitWorkTimers(void); //TIM1 - out, TIM2 - in, TIM3 - freq meas
 // Инициализация внешних прерываний
 static void InitEXTI(void);
 
-#define GET_IR_DATA_BIT (GPIOC->IDR & GPIO_Pin_0)
+#define GET_IR_DATA_BIT ((GPIOC->IDR & GPIO_Pin_0) ? 0 : 1)
 
 #define CHANNEL_0_PIN_NUMBER (GPIO_Pin_6)
 #define CHANNEL_1_PIN_NUMBER (GPIO_Pin_7)
@@ -89,6 +96,11 @@ const uint32_t ValueMask = 0x80000000;
 static void SetTimeoutToOutTimer(uint32_t value);
 // Получение первого не пустого значения в спске интервалов
 static uint32_t GetFirstNonEmptyIndex(const IRCode *code);
+// Установка нового интервала на отправку
+static void SetOutInterval(const uint32_t interval);
+// Отправка очередной части интервала
+static void SetNextPartOutInterval(void);
+
 // Инициализация выходных каналов
 static void InitOuputChannel(void);
 
@@ -243,10 +255,24 @@ static void InitWorkTimers(void)
 	/* Enable the CC2 Interrupt Request */
 	TIM_ITConfig(TIM3, TIM_IT_CC2, ENABLE);
 
+	//--
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM7, ENABLE);
+
+	// Time base
+	TIM_TimeBaseStructure.TIM_Period = 0xFFFF;
+	TIM_TimeBaseStructure.TIM_Prescaler = prescalerValue;
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM7, &TIM_TimeBaseStructure);
+
+	TIM_ITConfig(TIM7, TIM_IT_Update, ENABLE);
+	TIM_Cmd(TIM7, DISABLE);
+
 	NVIC_EnableIRQ(TIM2_IRQn);
 	NVIC_SetPriority(TIM2_IRQn, 3);
 	NVIC_EnableIRQ(TIM3_IRQn);
 	NVIC_SetPriority(TIM3_IRQn, 4);
+	NVIC_SetPriority(TIM7_IRQn, 2);
 
 	_InitFlags |= IsWorkTimersInit;
 }
@@ -327,6 +353,11 @@ volatile uint32_t IsScanning()
 	return _IsScanning != 0;
 }
 
+volatile uint32_t IsSending()
+{
+	return _IsSending != 0;
+}
+
 void EXTI0_IRQHandler()
 {
 	TIM_Cmd(TIM2, DISABLE);
@@ -395,6 +426,32 @@ void TIM3_IRQHandler(void)
   }
 }
 
+void TIM7_IRQHandler(void)
+{
+	TIM_ClearITPendingBit(TIM7, TIM_IT_Update);
+
+	if (!_SendingCode)
+		return;
+
+	if (_SendingTime)
+	{
+		SetNextPartOutInterval();
+	}
+	else
+	{
+		if (++_SendingIndex < _SendingCode->IntervalsCount)
+		{
+			SetOutInterval(_SendingCode->Intervals[_SendingIndex]);
+		}
+		else
+		{
+			TIM_Cmd(TIM7, DISABLE);
+			NVIC_DisableIRQ(TIM7_IRQn);
+			_IsSending = 0;
+			SetOutValueToChannel(_SendingChannel, 0);
+		}
+	}
+}
 // отладчный вывод кода
 void DebugPrint(IRCode *code)
 {
@@ -454,24 +511,55 @@ StatusCode SendCodeToChannel(IRCode *code, uint32_t channelID)
 		return StatusCode_ArgumentOutOfRange;
 
 	_SendingCode = code;
-	_SendIndex = GetFirstNonEmptyIndex(_SendingCode);
-	if (_SendIndex >= _SendingCode->IntervalsCount)
+	_SendingChannel = channelID;
+
+	_SendingIndex = GetFirstNonEmptyIndex(_SendingCode);
+	if (_SendingIndex >= _SendingCode->IntervalsCount)
 		return StatusCode_InternalError;
 
-	SetOutValueToChannel(channelID, GetValue(_SendingCode->Intervals[_SendIndex]));
-	SetTimeoutToOutTimer(GetTime(_SendingCode->Intervals[_SendIndex]));
-
+	SetCarrierFrequency(GetFrequencyInterval(_SendingCode->Frequency));
+	SetOutInterval(_SendingCode->Intervals[_SendingIndex]);
 	_IsSending = 1;
+
+	TIM_Cmd(TIM7, ENABLE);
+	NVIC_EnableIRQ(TIM7_IRQn);
 	return StatusCode_Ok;
 }
 
 uint32_t GetFirstNonEmptyIndex(const IRCode *code)
 {
-	return code->IntervalsCount;
+	if (!code)
+		return ~0;
+	if (code->IntervalsCount == 0)
+		return ~0;
+
+	for(size_t i=0; i < code->IntervalsCount; i++)
+	{
+		if (GetTime(code->Intervals[i]) != 0)
+			return i;
+	}
+	return ~0;
 }
 
-void SetTimeoutToOutTimer(uint32_t value)
+static void SetOutInterval(const uint32_t interval)
 {
+	_SendingTime = GetTime(interval);
+	SetOutValueToChannel(_SendingChannel, GetValue(interval));
+	SetNextPartOutInterval();
+}
+
+static void SetNextPartOutInterval(void)
+{
+	if (_SendingTime > OutTimeoutMax)
+	{
+		TIM7->CNT = 0;
+		_SendingTime -= OutTimeoutMax;
+	}
+	else
+	{
+		TIM7->CNT = OutTimeoutMax -_SendingTime;
+		_SendingTime = 0;
+	}
 }
 
 void SetOutValueToChannel(const uint32_t channelId, const uint8_t value)

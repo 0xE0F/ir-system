@@ -21,14 +21,14 @@ extern void PrintChar(const char c);
 #define _CMD_RUN	"run"
 #define _CMD_SET    "set"
 #define _CMD_PRINT  "print"
-#define _CMD_PIN    "pin"
+#define _CMD_OUT    "out"
 
 
 
 #define _NUM_OF_CMD 7
 
 //available  commands
-char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_SCAN, _CMD_RUN, _CMD_SET, _CMD_PRINT, _CMD_PIN};
+char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_SCAN, _CMD_RUN, _CMD_SET, _CMD_PRINT, _CMD_OUT};
 // array for comletion
 char * compl_world [_NUM_OF_CMD + 1];
 
@@ -109,35 +109,41 @@ int execute (int argc, const char * const * argv)
 				print("Code number not found\n\r");
 				return -1;
 			}
-		} else if (strcmp (argv[i], _CMD_PIN) == 0)
+		} else if (strcmp (argv[i], _CMD_OUT) == 0)
 		{
-			if (++i < argc)
-			{
-				arg = atoi (argv[i]);
-				if (arg > MaxChannelNumber)
-				{
-					print("Pin number out of range\n\r");
-					return -1;
-				}
-
-				if (++i < argc)
-				{
-					arg2 = atoi (argv[i]);
-				}
-				else
-				{
-					printf("Value not found\n\r");
-					return -1;
-				}
-				SendCodeToChannel(NULL, 0); //
-				SetOutValueToChannel(arg, arg2 > 0 ? 1 : 0);
-				return 0;
-
-			} else
-			{
-				print("Pin number not found\n\r");
-				return -1;
-			}
+			StatusCode code = SendCodeToChannel(_DebugCodes, 0);
+			printf("return: %d\n\r", (int)code);
+			print("wait ...");
+			while(IsSending()) {;}
+			print("OK\n\r");
+			return 0;
+//			if (++i < argc)
+//			{
+//				arg = atoi (argv[i]);
+//				if (arg > MaxChannelNumber)
+//				{
+//					print("Pin number out of range\n\r");
+//					return -1;
+//				}
+//
+//				if (++i < argc)
+//				{
+//					arg2 = atoi (argv[i]);
+//				}
+//				else
+//				{
+//					printf("Value not found\n\r");
+//					return -1;
+//				}
+//				SendCodeToChannel(NULL, 0); //
+//				//SetOutValueToChannel(arg, arg2 > 0 ? 1 : 0);
+//				return 0;
+//
+//			} else
+//			{
+//				print("Pin number not found\n\r");
+//				return -1;
+//			}
 
 		} else if (strcmp (argv[i], _CMD_PRINT) == 0)
 		{

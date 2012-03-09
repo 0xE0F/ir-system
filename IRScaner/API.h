@@ -50,6 +50,8 @@ uint32_t WriteCodeToStorage(IRCode *code, uint32_t id);
 // 1 - ошибка (код не найден или неизвесный номер канала)
 StatusCode SendCodeToChannel(IRCode *code, uint32_t channelID);
 
+volatile uint32_t IsSending();
+
 // ѕолучение стандартной частоты из интервала 30 к√ц - 60 к√ц
 // 0 - если частота вне диапазона
 uint32_t GetFrequencyInterval(uint32_t value);
