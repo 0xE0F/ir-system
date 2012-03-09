@@ -11,15 +11,20 @@
 #include "Terminal.h"
 #include "API.h"
 
+#include "RingBuffer.h"
+
 // create microrl object and pointer on it
 microrl_t rl;
 microrl_t * prl = &rl;
+RingBuffer *uartBuffer;
 
 static void InitUART(uint32_t baudrate);
 
 int main(void)
 {
 	InitUART(115200);
+
+	uartBuffer = MakeRingBuffer(16);
 
 	// call init with ptr to microrl instance and print callback
 	microrl_init (prl, print);
@@ -34,8 +39,11 @@ int main(void)
 	microrl_set_sigint_callback (prl, sigint);
 	while (1)
 	{
+		char c;
+
 		// put received char from stdin to microrl lib
-		microrl_insert_char (prl, get_char());
+		if ((!RB_IsEmpty(uartBuffer)) && RB_Read(uartBuffer, &c))
+			microrl_insert_char (prl, c);
 	}
 }
 
@@ -69,5 +77,17 @@ static void InitUART(uint32_t baudrate)
 	USART_InitStructure.USART_Parity = USART_Parity_No;
 
 	USART_Init(USART1, &USART_InitStructure);
+
+	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+
+	NVIC_EnableIRQ(USART1_IRQn);
+	NVIC_SetPriority(USART1_IRQn, 7);
+
 	USART_Cmd(USART1, ENABLE);
+}
+
+void USART1_IRQHandler(void)
+{
+	RB_Write(uartBuffer, USART_ReceiveData(USART1));
+	USART_ClearITPendingBit(USART1, USART_IT_RXNE);
 }

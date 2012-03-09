@@ -92,8 +92,6 @@ const uint32_t TimeMask = 0x7FFFFFFF;
 // Маска значения
 const uint32_t ValueMask = 0x80000000;
 
-// Установка таймаута на выходном таймере
-static void SetTimeoutToOutTimer(uint32_t value);
 // Получение первого не пустого значения в спске интервалов
 static uint32_t GetFirstNonEmptyIndex(const IRCode *code);
 // Установка нового интервала на отправку
