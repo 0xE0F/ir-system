@@ -9,7 +9,6 @@
 #include <Terminal.h>
 #include <API.h>
 
-extern signed int printf(const char *pFormat, ...);
 extern void PrintChar(const char c);
 
 #define _STM_32_VRESION_ "1.0"
@@ -99,9 +98,6 @@ int execute (int argc, const char * const * argv)
 					return -1;
 				}
 				Scan(&_DebugCodes[arg]);
-				print("Scanning ...\n\r");
-				while(IsScanning()) { ; }
-				DebugPrint(&_DebugCodes[arg]);
 				return 0;
 			}
 			else
@@ -113,9 +109,6 @@ int execute (int argc, const char * const * argv)
 		{
 			StatusCode code = SendCodeToChannel(_DebugCodes, 0);
 			printf("return: %d\n\r", (int)code);
-			print("wait ...");
-			while(IsSending()) {;}
-			print("OK\n\r");
 			return 0;
 //			if (++i < argc)
 //			{

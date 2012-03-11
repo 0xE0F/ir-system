@@ -308,41 +308,57 @@ void Scan(IRCode *irCode)
 {
 	if ((_InitFlags & IsWorkTimersInit) != IsWorkTimersInit)
 		InitWorkTimers();
+
 	if ((_InitFlags & IsEXTIInit) != IsEXTIInit)
 		InitEXTI();
+
 	if (irCode == NULL)
 		return;
 
 	_ScanningCode = irCode;
-	_ScanningCode->Frequency = 0;
-	_ScanningCode->IntervalsCount = 0;
+
+	memset(_ScanningCode, 0, sizeof(IRCode));
+
 	SetValue(&(_ScanningCode->Intervals[_ScanningCode->IntervalsCount]), GET_IR_DATA_BIT);
+
 	_CurrentTime = 0;
-	_IsScanning = 1;
 	_DetectFrequency = 0;
+
+	TIM_SetCounter(TIM2, 0);
+	TIM_SetCounter(TIM3, 0);
+	TIM_Cmd(TIM3, ENABLE);
+	TIM_Cmd(TIM2, DISABLE);
 
 	TIM_ClearITPendingBit(TIM3, TIM_IT_CC2);
 	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-	TIM2->CNT = 0;
-	TIM3->CNT = 0;
-	EXTI_ClearITPendingBit(EXTI_Line0);
 
-	TIM_Cmd(TIM2, DISABLE);
-	TIM_Cmd(TIM3, ENABLE);
+	EXTI_ClearITPendingBit(EXTI_Line0);
+	EXTI_ClearFlag(EXTI_Line0);
+
+	NVIC_EnableIRQ(TIM2_IRQn);
 	NVIC_EnableIRQ(EXTI0_IRQn);
+
+	EXTI->IMR |= EXTI_IMR_MR0;
+
+	_IsScanning = 1;
 }
 
 // Остановка записи
 void StopScan()
 {
 	NVIC_DisableIRQ(EXTI0_IRQn);
+	NVIC_DisableIRQ(TIM2_IRQn);
+
+	EXTI->IMR &= ~EXTI_IMR_MR0;
+
 	TIM_Cmd(TIM2, DISABLE);
 	TIM_Cmd(TIM3, DISABLE);
+
 	if (_ScanningCode)
 	{
 		_ScanningCode->Frequency = GetFrequencyInterval(_DetectFrequency);
 	}
-	_ScanningCode = NULL;
+
 	_IsScanning = 0;
 }
 
@@ -358,11 +374,12 @@ volatile uint32_t IsSending()
 
 void EXTI0_IRQHandler()
 {
-	TIM_Cmd(TIM2, DISABLE);
-	if (_ScanningCode)
+	if ((_ScanningCode) && (_IsScanning))
 	{
+		TIM_Cmd(TIM2, DISABLE);
+
 		uint32_t index = _ScanningCode->IntervalsCount;
-		uint32_t timeout = (uint32_t)(TIM2->CNT);
+		uint32_t timeout = TIM_GetCounter(TIM2) & 0x0000FFFF;
 		uint32_t time = GetTime(_ScanningCode->Intervals[index]);
 
 		SetTime( &(_ScanningCode->Intervals[index++]),time+timeout);
@@ -370,8 +387,8 @@ void EXTI0_IRQHandler()
 		SetValue( &(_ScanningCode->Intervals[index]), GET_IR_DATA_BIT);
 		_ScanningCode->IntervalsCount = index;
 
-		TIM2->CNT =0;
-		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+		TIM_SetCounter(TIM2, 0);
+
 		TIM_Cmd(TIM2, ENABLE);
 		_CurrentTime += timeout;
 		if ((_CurrentTime > TimeToStop) || (_ScanningCode->IntervalsCount >= INTERVALS_MAX))
@@ -384,8 +401,7 @@ void EXTI0_IRQHandler()
 
 void TIM2_IRQHandler()
 {
-	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-	if (_ScanningCode)
+	if ((_ScanningCode) && (_IsScanning))
 	{
 		uint32_t time = GetTime(_ScanningCode->Intervals[_ScanningCode->IntervalsCount]);
 		SetTime(&(_ScanningCode->Intervals[_ScanningCode->IntervalsCount]), time + UINT16_MAX);
@@ -395,6 +411,7 @@ void TIM2_IRQHandler()
 			StopScan();
 		}
 	}
+	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 }
 
 void TIM3_IRQHandler(void)
@@ -455,8 +472,9 @@ void DebugPrint(IRCode *code)
 {
 	if (!code)
 	{
-		printf("Illegal IRCode pointer\n\r");
-		return;
+		if (!_ScanningCode)
+			return;
+		code = _ScanningCode;
 	}
 
 	printf("ID: 0x%08X\n\r", (unsigned int)code->ID);
@@ -474,7 +492,7 @@ void DebugPrint(IRCode *code)
 	{
 		printf("[%03u] %01X -> [%08u us]\n\r", (unsigned int)i, (unsigned char)GetValue(code->Intervals[i]), (unsigned int)GetTime(code->Intervals[i]));
 	}
-	printf("==>\n\r\n\r");
+	printf("==> ");
 }
 
 static void InitOuputChannel(void)
@@ -496,8 +514,6 @@ static void InitOuputChannel(void)
 // !0 - код ошибки (код не найден или неизвесный номер канала)
 StatusCode SendCodeToChannel(IRCode *code, uint32_t channelID)
 {
-	#warning "Queue not implemented"
-
 	if ((_InitFlags & IsOutputChannelInit) != IsOutputChannelInit)
 		InitOuputChannel();
 
@@ -521,6 +537,7 @@ StatusCode SendCodeToChannel(IRCode *code, uint32_t channelID)
 
 	TIM_Cmd(TIM7, ENABLE);
 	NVIC_EnableIRQ(TIM7_IRQn);
+
 	return StatusCode_Ok;
 }
 

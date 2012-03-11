@@ -1,6 +1,8 @@
 #ifndef _MICRORL_MISC_H_
 #define _MICRORL_MISC_H_
 
+extern signed int printf(const char *pFormat, ...);
+
 // print to stream callback
 void print (char * str);
 

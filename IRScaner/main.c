@@ -18,13 +18,27 @@ microrl_t rl;
 microrl_t * prl = &rl;
 RingBuffer *uartBuffer;
 
+static void InitLeds(void);
 static void InitUART(uint32_t baudrate);
+
+inline void ReceiveLedOn(void) { GPIOC->BSRR |= GPIO_Pin_8;}
+inline void ReceiveLedOff(void) { GPIOC->BRR |= GPIO_Pin_8;}
+inline void ReceiveLedInv(void) { GPIOC->ODR ^= GPIO_Pin_8;}
+
+inline void TransmitLedOn(void) { GPIOC->BSRR |= GPIO_Pin_9;}
+inline void TransmitLedOff(void) { GPIOC->BRR |= GPIO_Pin_9;}
+inline void TransmitLedInv(void) { GPIOC->ODR ^= GPIO_Pin_9;}
+
+enum CurrentState { IDLE, SCANNING, TRANSMITTING};
+
+static enum CurrentState _CurrentState = IDLE;
 
 int main(void)
 {
-	InitUART(115200);
-
 	uartBuffer = MakeRingBuffer(16);
+
+	InitUART(115200);
+	InitLeds();
 
 	// call init with ptr to microrl instance and print callback
 	microrl_init (prl, print);
@@ -39,11 +53,47 @@ int main(void)
 	microrl_set_sigint_callback (prl, sigint);
 	while (1)
 	{
-		char c;
-
+		uint8_t c;
 		// put received char from stdin to microrl lib
 		if ((!RB_IsEmpty(uartBuffer)) && RB_Read(uartBuffer, &c))
 			microrl_insert_char (prl, c);
+
+		switch(_CurrentState)
+		{
+			case IDLE:
+				if (IsScanning())
+				{
+					ReceiveLedOn();
+					_CurrentState = SCANNING;
+					print("Scanning ...\n\r");
+				}
+				if (IsSending())
+				{
+					TransmitLedOn();
+					print("Transmitting ...");
+					_CurrentState = TRANSMITTING;
+				}
+				break;
+
+			case SCANNING:
+				if (!IsScanning())
+				{
+					_CurrentState = IDLE;
+					ReceiveLedOff();
+					DebugPrint(0);
+					printf("Done \n");
+				}
+				break;
+
+			case TRANSMITTING:
+				if (!IsSending())
+				{
+					_CurrentState = IDLE;
+					TransmitLedOff();
+					printf("done.\n");
+				}
+				break;
+		}
 	}
 }
 
@@ -86,8 +136,20 @@ static void InitUART(uint32_t baudrate)
 	USART_Cmd(USART1, ENABLE);
 }
 
+static void InitLeds(void)
+{
+	GPIO_InitTypeDef  GPIO_InitStructure;
+
+	GPIO_StructInit(&GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
+}
+
 void USART1_IRQHandler(void)
 {
 	RB_Write(uartBuffer, USART_ReceiveData(USART1));
 	USART_ClearITPendingBit(USART1, USART_IT_RXNE);
 }
+
