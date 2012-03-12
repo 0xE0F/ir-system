@@ -9,7 +9,9 @@
 #include <string.h>
 #include "microrl/microrl.h"
 #include "Terminal.h"
-#include "API.h"
+#include "IR/IR.h"
+#include "IR/IRScanner.h"
+#include "IR/IRTransmitter.h"
 
 #include "RingBuffer.h"
 
@@ -17,6 +19,8 @@
 microrl_t rl;
 microrl_t * prl = &rl;
 RingBuffer *uartBuffer;
+
+IRCode DebugCode;
 
 static void InitLeds(void);
 static void InitUART(uint32_t baudrate);
@@ -80,7 +84,7 @@ int main(void)
 				{
 					_CurrentState = IDLE;
 					ReceiveLedOff();
-					DebugPrint(0);
+					DebugPrint(&DebugCode);
 					printf("Done \n");
 				}
 				break;

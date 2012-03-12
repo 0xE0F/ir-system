@@ -6,8 +6,10 @@
 #include "microrl/config.h"
 #include <string.h>
 #include <stdlib.h>
-#include <Terminal.h>
-#include <API.h>
+#include "Terminal.h"
+#include "IR/IR.h"
+#include "IR/IRScanner.h"
+#include "IR/IRTransmitter.h"
 
 extern void PrintChar(const char c);
 
@@ -32,9 +34,7 @@ char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_SCAN, _CMD_RUN, _CMD_SET, _CMD
 char * compl_world [_NUM_OF_CMD + 1];
 
 
-static IRCode _DebugCodes[2];
-
-static uint32_t const _DebugCodesCount = sizeof(_DebugCodes) / sizeof(_DebugCodes[0]);
+extern IRCode DebugCode;
 
 
 //*****************************************************************************
@@ -89,25 +89,11 @@ int execute (int argc, const char * const * argv)
 		}
 		else if (strcmp (argv[i], _CMD_SCAN) == 0)
 		{
-			if (++i < argc)
-			{
-				arg = atoi(argv[i]);
-				if (arg >= _DebugCodesCount)
-				{
-					print("Code out of range\n\r");
-					return -1;
-				}
-				Scan(&_DebugCodes[arg]);
-				return 0;
-			}
-			else
-			{
-				print("Code number not found\n\r");
-				return -1;
-			}
+			Scan(&DebugCode);
+			return 0;
 		} else if (strcmp (argv[i], _CMD_OUT) == 0)
 		{
-			StatusCode code = SendCodeToChannel(_DebugCodes, 0);
+			StatusCode code = SendCodeToChannel(&DebugCode, 0);
 			printf("return: %d\n\r", (int)code);
 			return 0;
 //			if (++i < argc)
@@ -140,16 +126,16 @@ int execute (int argc, const char * const * argv)
 
 		} else if (strcmp (argv[i], _CMD_PRINT) == 0)
 		{
-			if (++i < argc)
-			{
-				arg = atoi (argv[i]);
-				if (arg > (_DebugCodesCount-1))
-				{
-					print("Code number out of range\n\r");
-					return -1;
-				}
-			}
-			DebugPrint(&(_DebugCodes[arg]));
+//			if (++i < argc)
+//			{
+//				arg = atoi (argv[i]);
+//				if (arg > (_DebugCodesCount-1))
+//				{
+//					print("Code number out of range\n\r");
+//					return -1;
+//				}
+//			}
+			DebugPrint(&DebugCode);
 			return 0;
 		} else if (strcmp (argv[i], _CMD_SET) == 0)
 		{

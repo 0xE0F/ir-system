@@ -1,7 +1,6 @@
 /*
  * Простой кольцевой буфер
  */
-
 #ifndef __RING_BUFFER__H__
 #define __RING_BUFFER__H__
 
