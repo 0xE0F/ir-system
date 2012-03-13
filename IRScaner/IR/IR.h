@@ -53,4 +53,8 @@ uint8_t GetValue(uint32_t interval);
 // отладчный вывод кода
 void DebugPrint(IRCode *code);
 
+typedef enum  { CS_OK, CS_ERROR, CS_WARNING} CheckStatus;
+// Проверка кода
+CheckStatus CheckIRCode(IRCode *code);
+
 #endif // __IR__H__

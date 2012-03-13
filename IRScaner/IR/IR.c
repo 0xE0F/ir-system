@@ -84,3 +84,20 @@ void DebugPrint(IRCode *code)
 	}
 	printf("==> ");
 }
+
+CheckStatus CheckIRCode(IRCode *code)
+{
+	if (!code)
+		return CS_ERROR;
+
+	if (code->IntervalsCount >= INTERVALS_MAX)
+		return CS_ERROR;
+
+	if ((code->Frequency < DetectFreqMin) || (code->Frequency > DetectFreqMax))
+		return CS_ERROR;
+
+	if ((code->Frequency < 36000) || (code->Frequency >38000))
+		return CS_WARNING;
+
+	return CS_OK;
+}

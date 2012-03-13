@@ -36,7 +36,6 @@ char * compl_world [_NUM_OF_CMD + 1];
 
 extern IRCode DebugCode;
 
-
 //*****************************************************************************
 void print (char * str)
 {
@@ -57,8 +56,8 @@ char get_char (void)
 void print_help (void)
 {
 	print ("Use TAB key for completion\n\rCommand:\n\r");
-	print ("\tscan n	- scanning ir code and stre to debug storage with number n\n\r");
-	print ("\trun [code] [channel]	- send stored [code] to [channel]\n\r");
+	print ("\tscan	- scanning ir code\n\r");
+	print ("\tout channel	- transmit ir code by channel\n\r");
 	print ("\tset frequency	- set carier frequency\n\r");
 	print ("\tprint	[code] - print debug output [code]\n\r");
 	print ("\tclear - clear display\n\r");
@@ -71,7 +70,7 @@ void print_help (void)
 int execute (int argc, const char * const * argv)
 {
 	int i = 0;
-	uint32_t arg = 0, arg2 = 0;
+	uint32_t arg = 0;
 	// just iterate through argv word and compare it with your commands
 	while (i < argc) {
 		if (strcmp (argv[i], _CMD_HELP) == 0) {
@@ -93,48 +92,28 @@ int execute (int argc, const char * const * argv)
 			return 0;
 		} else if (strcmp (argv[i], _CMD_OUT) == 0)
 		{
-			StatusCode code = SendCodeToChannel(&DebugCode, 0);
-			printf("return: %d\n\r", (int)code);
-			return 0;
-//			if (++i < argc)
-//			{
-//				arg = atoi (argv[i]);
-//				if (arg > MaxChannelNumber)
-//				{
-//					print("Pin number out of range\n\r");
-//					return -1;
-//				}
-//
-//				if (++i < argc)
-//				{
-//					arg2 = atoi (argv[i]);
-//				}
-//				else
-//				{
-//					printf("Value not found\n\r");
-//					return -1;
-//				}
-//				SendCodeToChannel(NULL, 0); //
-//				//SetOutValueToChannel(arg, arg2 > 0 ? 1 : 0);
-//				return 0;
-//
-//			} else
-//			{
-//				print("Pin number not found\n\r");
-//				return -1;
-//			}
-
+			if (++i < argc)
+			{
+				arg = atoi (argv[i]);
+				if (arg <= MaxChannelNumber)
+				{
+					StatusCode code = SendCodeToChannel(&DebugCode, arg);
+					printf("return: %d\n\r", (int)code);
+					return 0;
+				}
+				else
+				{
+					print("Channel number out of range. Must be 0...3\n\r");
+					return -1;
+				}
+			}
+			else
+			{
+				print("Channel number not found\n\r");
+				return -1;
+			}
 		} else if (strcmp (argv[i], _CMD_PRINT) == 0)
 		{
-//			if (++i < argc)
-//			{
-//				arg = atoi (argv[i]);
-//				if (arg > (_DebugCodesCount-1))
-//				{
-//					print("Code number out of range\n\r");
-//					return -1;
-//				}
-//			}
 			DebugPrint(&DebugCode);
 			return 0;
 		} else if (strcmp (argv[i], _CMD_SET) == 0)

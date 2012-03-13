@@ -18,9 +18,9 @@
 // create microrl object and pointer on it
 microrl_t rl;
 microrl_t * prl = &rl;
-RingBuffer *uartBuffer;
+RingBuffer *uartBuffer;		// Буфер терминала
 
-IRCode DebugCode;
+IRCode DebugCode;	// Отладочный код
 
 static void InitLeds(void);
 static void InitUART(uint32_t baudrate);
@@ -41,8 +41,8 @@ int main(void)
 {
 	uartBuffer = MakeRingBuffer(16);
 
-	InitUART(115200);
 	InitLeds();
+	InitUART(115200);
 
 	// call init with ptr to microrl instance and print callback
 	microrl_init (prl, print);
@@ -71,7 +71,7 @@ int main(void)
 					_CurrentState = SCANNING;
 					print("Scanning ...\n\r");
 				}
-				if (IsSending())
+				if (IsTransmitting())
 				{
 					TransmitLedOn();
 					print("Transmitting ...");
@@ -85,16 +85,16 @@ int main(void)
 					_CurrentState = IDLE;
 					ReceiveLedOff();
 					DebugPrint(&DebugCode);
-					printf("Done \n");
+					printf("Done \n\r");
 				}
 				break;
 
 			case TRANSMITTING:
-				if (!IsSending())
+				if (!IsTransmitting())
 				{
 					_CurrentState = IDLE;
 					TransmitLedOff();
-					printf("done.\n");
+					printf("done.\n\r");
 				}
 				break;
 		}

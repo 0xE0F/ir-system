@@ -10,7 +10,7 @@ extern const uint32_t MaxChannelNumber;
 typedef enum {StatusCode_Ok = 0, StatusCode_NullArgumentReference = 1, StatusCode_ArgumentOutOfRange = 2, StatusCode_Busy = 3, StatusCode_InternalError = 4} StatusCode;
 
 // Проверка текущего состояния передатчика
-volatile uint32_t IsSending();
+volatile uint32_t IsTransmitting();
 
 // Выдача кода в соответствующий канал
 StatusCode SendCodeToChannel(IRCode *code, uint32_t channelID);
