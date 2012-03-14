@@ -78,15 +78,14 @@ static void InitTimers(void)
 	/* Compute the prescaler value */
 	uint16_t prescalerValue = (uint16_t) (SystemCoreClock / 1000000) - 1;
 
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
-
-	GPIO_InitTypeDef  GPIO_InitStructure;
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 
+	GPIO_InitTypeDef  GPIO_InitStructure;
 	GPIO_StructInit(&GPIO_InitStructure);
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
@@ -96,39 +95,36 @@ static void InitTimers(void)
 	TIM_TimeBaseStructure.TIM_Prescaler = prescalerValue;
 	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
 
-	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
+	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
+
 
 	TIM_ICInitTypeDef  TIM_ICInitStructure;
-
 	TIM_ICInitStructure.TIM_Channel = TIM_Channel_2;
 	TIM_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_Rising;
 	TIM_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
 	TIM_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;
 	TIM_ICInitStructure.TIM_ICFilter = 0x0;
 
-	TIM_PWMIConfig(TIM3, &TIM_ICInitStructure);
+	TIM_PWMIConfig(TIM2, &TIM_ICInitStructure);
 
 	/* Select the TIM3 Input Trigger: TI2FP2 */
-	TIM_SelectInputTrigger(TIM3, TIM_TS_TI2FP2);
+	TIM_SelectInputTrigger(TIM2, TIM_TS_TI2FP2);
 
 	/* Select the slave Mode: Reset Mode */
-	TIM_SelectSlaveMode(TIM3, TIM_SlaveMode_Reset);
+	TIM_SelectSlaveMode(TIM2, TIM_SlaveMode_Reset);
 
 	/* Enable the Master/Slave Mode */
-	TIM_SelectMasterSlaveMode(TIM3, TIM_MasterSlaveMode_Enable);
+	TIM_SelectMasterSlaveMode(TIM2, TIM_MasterSlaveMode_Enable);
 
 	/* Enable the CC2 Interrupt Request */
-	TIM_ITConfig(TIM3, TIM_IT_CC2, ENABLE);
-
-	//--
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM7, ENABLE);
+	TIM_ITConfig(TIM2, TIM_IT_CC2, ENABLE);
 
 	NVIC_EnableIRQ(TIM2_IRQn);
-	NVIC_SetPriority(TIM2_IRQn, 3);
 	NVIC_EnableIRQ(TIM3_IRQn);
-	NVIC_SetPriority(TIM3_IRQn, 4);
+	NVIC_SetPriority(TIM2_IRQn, 4);
+	NVIC_SetPriority(TIM3_IRQn, 3);
 
 	_InitFlags |= _WorkTimersInit;
 }
@@ -156,16 +152,16 @@ void Scan(IRCode *irCode)
 
 	TIM_SetCounter(TIM2, 0);
 	TIM_SetCounter(TIM3, 0);
-	TIM_Cmd(TIM3, ENABLE);
-	TIM_Cmd(TIM2, DISABLE);
+	TIM_Cmd(TIM2, ENABLE);
+	TIM_Cmd(TIM3, DISABLE);
 
-	TIM_ClearITPendingBit(TIM3, TIM_IT_CC2);
-	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+	TIM_ClearITPendingBit(TIM2, TIM_IT_CC2);
+	TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
 	EXTI_ClearITPendingBit(EXTI_Line0);
 	EXTI_ClearFlag(EXTI_Line0);
 
-	NVIC_EnableIRQ(TIM2_IRQn);
+	NVIC_EnableIRQ(TIM3_IRQn);
 	NVIC_EnableIRQ(EXTI0_IRQn);
 
 	EXTI->IMR |= EXTI_IMR_MR0;
@@ -176,8 +172,8 @@ void Scan(IRCode *irCode)
 // Остановка записи
 static void StopScan()
 {
+	NVIC_DisableIRQ(TIM3_IRQn);
 	NVIC_DisableIRQ(EXTI0_IRQn);
-	NVIC_DisableIRQ(TIM2_IRQn);
 
 	EXTI->IMR &= ~EXTI_IMR_MR0;
 
@@ -187,6 +183,7 @@ static void StopScan()
 	if (_ScanningCode)
 	{
 		_ScanningCode->Frequency = GetFrequencyInterval(_DetectFrequency);
+		_ScanningCode->Flags = _DutyCycle;
 	}
 
 	_IsScanning = 0;
@@ -196,10 +193,10 @@ void EXTI0_IRQHandler()
 {
 	if ((_ScanningCode) && (_IsScanning))
 	{
-		TIM_Cmd(TIM2, DISABLE);
+		TIM_Cmd(TIM3, DISABLE);
 
 		uint32_t index = _ScanningCode->IntervalsCount;
-		uint32_t timeout = TIM_GetCounter(TIM2) & 0x0000FFFF;
+		uint32_t timeout = TIM_GetCounter(TIM3) & 0x0000FFFF;
 		uint32_t time = GetTime(_ScanningCode->Intervals[index]);
 
 		SetTime( &(_ScanningCode->Intervals[index++]),time+timeout);
@@ -207,9 +204,9 @@ void EXTI0_IRQHandler()
 		SetValue( &(_ScanningCode->Intervals[index]), GET_IR_DATA_BIT);
 		_ScanningCode->IntervalsCount = index;
 
-		TIM_SetCounter(TIM2, 0);
+		TIM_SetCounter(TIM3, 0);
 
-		TIM_Cmd(TIM2, ENABLE);
+		TIM_Cmd(TIM3, ENABLE);
 		_CurrentTime += timeout;
 		if ((_CurrentTime > TimeToStop) || (_ScanningCode->IntervalsCount >= INTERVALS_MAX))
 		{
@@ -219,7 +216,7 @@ void EXTI0_IRQHandler()
 	EXTI_ClearITPendingBit(EXTI_Line0);
 }
 
-void TIM2_IRQHandler()
+void TIM3_IRQHandler()
 {
 	if ((_ScanningCode) && (_IsScanning))
 	{
@@ -231,21 +228,21 @@ void TIM2_IRQHandler()
 			StopScan();
 		}
 	}
-	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+	TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 }
 
-void TIM3_IRQHandler(void)
+void TIM2_IRQHandler(void)
 {
-  /* Clear TIM3 Capture compare interrupt pending bit */
-  TIM_ClearITPendingBit(TIM3, TIM_IT_CC2);
+	/* Clear TIM3 Capture compare interrupt pending bit */
+  TIM_ClearITPendingBit(TIM2, TIM_IT_CC2);
 
   /* Get the Input Capture value */
-  _IC2Value = TIM_GetCapture2(TIM3);
+  _IC2Value = TIM_GetCapture2(TIM2);
 
   if (_IC2Value != 0)
   {
     /* Duty cycle computation */
-    _DutyCycle = (TIM_GetCapture1(TIM3) * 100) / _IC2Value;
+    _DutyCycle = (TIM_GetCapture1(TIM2) * 100) / _IC2Value;
 
     /* Frequency computation */
     _SharedFrequency = SystemCoreClock / _IC2Value;
