@@ -233,7 +233,7 @@ void TIM3_IRQHandler()
 
 void TIM2_IRQHandler(void)
 {
-	/* Clear TIM3 Capture compare interrupt pending bit */
+	/* Clear TIM2 Capture compare interrupt pending bit */
   TIM_ClearITPendingBit(TIM2, TIM_IT_CC2);
 
   /* Get the Input Capture value */

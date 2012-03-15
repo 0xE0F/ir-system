@@ -15,6 +15,10 @@
 
 #include "RingBuffer.h"
 
+#include <Storage/ffconf.h>
+#include <Storage/ff.h>
+#include <Storage/diskio.h>
+
 // create microrl object and pointer on it
 microrl_t rl;
 microrl_t * prl = &rl;
@@ -39,11 +43,44 @@ static enum CurrentState _CurrentState = IDLE;
 
 int main(void)
 {
+	FRESULT f_err_code;
+	static FATFS FATFS_Obj;
+	FIL fil_obj;
+
+	/* Setup SysTick Timer for 1 millisecond interrupts, also enables Systick and Systick-Interrupt */
+	if (SysTick_Config(SystemCoreClock / 1000))
+	{
+		/* Capture error */
+		while (1);
+	}
+
 	uartBuffer = MakeRingBuffer(16);
 
 	InitLeds();
 	InitUART(115200);
 
+	printf("disk_initialize:%d\n\r", (WORD)disk_initialize(0));
+
+	f_err_code=f_mount(0, &FATFS_Obj);	//Mount Fat Fs
+	print("mounting FAT...");
+	if(f_err_code==0)
+	{
+		print("ok\r\n");
+		f_err_code=f_mkdir ("0:newdir");	// Create newdir
+		print("creating newdir ");
+		if(f_err_code==0)
+			print("ok\r\n");
+		else
+			print("fail\r\n");
+
+		f_err_code=f_mount(0, NULL);	 //Unmount Fat Fs
+		print("unmounting FAT...");
+		if(f_err_code==0)
+			print("ok\r\n");
+		else print("fail\r\n");
+	}
+	else
+		print("fail\r\n");
 	// call init with ptr to microrl instance and print callback
 	microrl_init (prl, print);
 	// set callback for execute
@@ -69,7 +106,7 @@ int main(void)
 				{
 					ReceiveLedOn();
 					_CurrentState = SCANNING;
-					print("Scanning ...\n\r");
+					print("Scanning ...\r\n");
 				}
 				if (IsTransmitting())
 				{
@@ -85,7 +122,7 @@ int main(void)
 					_CurrentState = IDLE;
 					ReceiveLedOff();
 					DebugPrint(&DebugCode);
-					printf("Done \n\r");
+					printf("Done\r\n");
 				}
 				break;
 
@@ -94,7 +131,7 @@ int main(void)
 				{
 					_CurrentState = IDLE;
 					TransmitLedOff();
-					printf("done.\n\r");
+					printf("done.\r\n");
 				}
 				break;
 		}
@@ -159,3 +196,25 @@ void USART1_IRQHandler(void)
 	USART_ClearITPendingBit(USART1, USART_IT_RXNE);
 }
 
+RAMFUNC void SysTick_Handler(void)
+{
+	static uint16_t cnt=0;
+	static uint8_t flip=0, cntdiskio=0;
+
+	cnt++;
+	if( cnt >= 500 ) {
+		cnt = 0;
+		/* alive sign */
+		if ( flip ) {
+			GPIOC->BSRR |= GPIO_Pin_9;
+		} else {
+			GPIOC->BRR |= GPIO_Pin_9;		}
+		flip = !flip;
+	}
+
+	cntdiskio++;
+	if ( cntdiskio >= 10 ) {
+		cntdiskio = 0;
+		disk_timerproc(); /* to be called every 10ms */
+	}
+}
