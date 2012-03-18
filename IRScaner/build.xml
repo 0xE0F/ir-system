@@ -58,12 +58,12 @@
       <compilerarg value="-ffunction-sections"/>
       
       <compilerarg value="-std=c99"/>
-      <compilerarg value="-w9"/>
-      <compilerarg value="-O1"/>
+      
+      <compilerarg value="-O2"/>
       <compilerarg value="-g"/>
       
       <!-- arm-none-eabi-gcc linker arguments -->
-      <linkerarg value="-O0"/>
+      <linkerarg value="-O2"/>
       <linkerarg value="-nostartfiles"/>
       <linkerarg value="-Map=${project.name}.map"/>
       <linkerarg value="-mcpu=cortex-m3"/>

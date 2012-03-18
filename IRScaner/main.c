@@ -18,11 +18,12 @@
 #include <Storage/ffconf.h>
 #include <Storage/ff.h>
 #include <Storage/diskio.h>
+#include <Storage/Storage.h>
 
 // create microrl object and pointer on it
 microrl_t rl;
 microrl_t * prl = &rl;
-RingBuffer *uartBuffer;		// Буфер терминала
+static RingBuffer *uartBuffer; // Буфер терминала
 
 IRCode DebugCode;	// Отладочный код
 
@@ -37,50 +38,38 @@ inline void TransmitLedOn(void) { GPIOC->BSRR |= GPIO_Pin_9;}
 inline void TransmitLedOff(void) { GPIOC->BRR |= GPIO_Pin_9;}
 inline void TransmitLedInv(void) { GPIOC->ODR ^= GPIO_Pin_9;}
 
-enum CurrentState { IDLE, SCANNING, TRANSMITTING};
+enum CurrentState { IDLE, SCANNING, TRANSMITTING, CROPPED};
 
 static enum CurrentState _CurrentState = IDLE;
 
 int main(void)
 {
-	FRESULT f_err_code;
-	static FATFS FATFS_Obj;
-	FIL fil_obj;
+	uint32_t tmp;
 
 	/* Setup SysTick Timer for 1 millisecond interrupts, also enables Systick and Systick-Interrupt */
 	if (SysTick_Config(SystemCoreClock / 1000))
 	{
-		/* Capture error */
 		while (1);
 	}
 
 	uartBuffer = MakeRingBuffer(16);
-
 	InitLeds();
 	InitUART(115200);
 
-	printf("disk_initialize:%d\n\r", (WORD)disk_initialize(0));
-
-	f_err_code=f_mount(0, &FATFS_Obj);	//Mount Fat Fs
-	print("mounting FAT...");
-	if(f_err_code==0)
+	print("Initialization storage...");
+	tmp = InitStorage();
+	if (!tmp)
 	{
-		print("ok\r\n");
-		f_err_code=f_mkdir ("0:newdir");	// Create newdir
-		print("creating newdir ");
-		if(f_err_code==0)
-			print("ok\r\n");
-		else
-			print("fail\r\n");
-
-		f_err_code=f_mount(0, NULL);	 //Unmount Fat Fs
-		print("unmounting FAT...");
-		if(f_err_code==0)
-			print("ok\r\n");
-		else print("fail\r\n");
+		print("Ok\n\r");
+		PrintStorageStatus();
+		PrintConentStorage();
 	}
 	else
-		print("fail\r\n");
+	{
+		printf("Fail. Status: %d\n\r", (unsigned int)tmp);
+		_CurrentState = CROPPED;
+	}
+
 	// call init with ptr to microrl instance and print callback
 	microrl_init (prl, print);
 	// set callback for execute
@@ -133,6 +122,10 @@ int main(void)
 					TransmitLedOff();
 					printf("done.\r\n");
 				}
+				break;
+			case CROPPED:
+				break;
+			default:
 				break;
 		}
 	}

@@ -133,6 +133,10 @@
  #define RCC_APBPeriph_SPI_SD     RCC_APB2Periph_SPI1
  /* - for SPI1 and full-speed APB2: 72MHz/4 */
  #define SPI_BaudRatePrescaler_SPI_SD  SPI_BaudRatePrescaler_4
+// #define GPIO_PWR                 GPIOB
+// #define RCC_APB2Periph_GPIO_PWR  RCC_APB2Periph_GPIOB
+// #define GPIO_Pin_PWR             GPIO_Pin_0
+// #define GPIO_Mode_PWR            GPIO_Mode_Out_OD /* pull-up resistor at power FET */
 
 #else
 #error "unsupported board"
