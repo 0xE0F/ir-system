@@ -10,6 +10,7 @@
 #include "IR/IR.h"
 #include "IR/IRScanner.h"
 #include "IR/IRTransmitter.h"
+#include "Storage/Storage.h"
 
 extern void PrintChar(const char c);
 
@@ -23,13 +24,15 @@ extern void PrintChar(const char c);
 #define _CMD_SET    "set"
 #define _CMD_PRINT  "print"
 #define _CMD_OUT    "out"
+#define _CMD_LS     "ls"
+#define _CMD_OPEN     "open"
 
 
 
-#define _NUM_OF_CMD 7
+#define _NUM_OF_CMD 9
 
 //available  commands
-char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_SCAN, _CMD_RUN, _CMD_SET, _CMD_PRINT, _CMD_OUT};
+char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_SCAN, _CMD_RUN, _CMD_SET, _CMD_PRINT, _CMD_OUT, _CMD_LS, _CMD_OPEN};
 // array for comletion
 char * compl_world [_NUM_OF_CMD + 1];
 
@@ -136,6 +139,27 @@ int execute (int argc, const char * const * argv)
 				print ("Frequency value not found\n\r");
 				return 1;
 			}
+			return 0;
+		}
+		else if (strcmp (argv[i], _CMD_LS) == 0)
+		{
+			PrintConentStorage();
+			return 0;
+		}
+		else if (strcmp (argv[i], _CMD_OPEN) == 0)
+		{
+			if (++i < argc)
+			{
+				StorageStatus res;
+				arg = atoi (argv[i]);
+				res = Open(arg, &DebugCode);
+				if (res == StorageNoError)
+					printf("ID: %08X\n\rFrequency: %u\n\rIntervals: %u\n\r",(unsigned int)DebugCode.ID, (unsigned int)DebugCode.Frequency, (unsigned int)DebugCode.IntervalsCount);
+				else
+					printf("Error open file: %d\n\r", res);
+				return 0;
+			}
+
 			return 0;
 		}
 		else {

@@ -36,11 +36,12 @@
 #include "stm32f10x_spi.h"
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_rcc.h"
+#include "stm32f10x_dma.h"
 #include "ffconf.h"
 #include "diskio.h"
 
 // demo uses a command line option to define this (see Makefile):
-// #define STM32_SD_USE_DMA
+#define STM32_SD_USE_DMA
 
 
 #ifdef STM32_SD_USE_DMA

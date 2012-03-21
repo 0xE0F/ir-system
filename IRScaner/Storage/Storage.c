@@ -1,5 +1,7 @@
 #include <stm32f10x.h>
 #include <IR/IR.h>
+#include <string.h>
+#include <stdio.h>
 
 #include <Storage/ffconf.h>
 #include <Storage/ff.h>
@@ -7,16 +9,20 @@
 
 #include <Storage/Storage.h>
 
+static void MakeFileName(uint32_t id, char *str);
+
 /* ============================================= */
 // Public API
 /* ============================================= */
 
 static FATFS _FatFs;
+static uint8_t _IsStorageInit;
 
 // Инициализация хранилища
 StorageStatus InitStorage(void)
 {
 	FRESULT result;
+	_IsStorageInit = 0;
 
 	WORD status = (WORD)disk_initialize(0);
 	if (status)
@@ -33,19 +39,79 @@ StorageStatus InitStorage(void)
 	if (result != FR_OK)
 		return StorageInternalError;
 
+	_IsStorageInit = 1;
 	return StorageNoError;
 }
 
 // Сохранение кода в хранилище
 StorageStatus Save(IRCode *code)
 {
-	return StorageInternalError;
+	FIL file;
+	FRESULT res;
+	UINT bw;
+	char fName[8 + 1 + 3 + 1] = {'\0'}; // 8 name, + .bin + \0
+
+	if (!_IsStorageInit)
+		return StorageNoDevice;
+	MakeFileName(code->ID, fName);
+	res = f_open(&file, fName, FA_CREATE_ALWAYS | FA_WRITE);
+	if (res)
+	{
+		printf("Create file error: %d\n\r", res);
+		return StorageInternalError;
+	}
+	res = f_write(&file, code, sizeof(IRCode), &bw);
+	if (res || bw != sizeof(IRCode))
+	{
+		printf("Write file error: %d, bytes to write: %d\n\r", res, bw);
+		return StorageInternalError;
+	}
+	f_sync(&file);
+	return StorageNoError;
 }
 
 // Чтение из хранилища
-StorageStatus Open(const uint32_t id, IRCode *resutl)
+StorageStatus Open(const uint32_t id, IRCode *result)
 {
-	return StorageInternalError;
+	char fName[8 + 1 + 3 + 1] = {'\0'}; // 8 name, + .bin + \0
+	FRESULT res;
+	FIL file;
+	UINT btr = 0;
+
+	if (!_IsStorageInit)
+		return StorageNoDevice;
+
+	if (!result)
+		return StorageInternalError;
+
+	MakeFileName(id, fName);
+	res = f_open(&file, fName, FA_OPEN_EXISTING | FA_READ);
+	if (res)
+	{
+		printf("Error open file: %s, res: %d\n\r", fName, res);
+		return StorageNotFound;
+	}
+
+	res = f_read(&file, result, sizeof(IRCode), &btr);
+	if (res || btr != sizeof(IRCode))
+	{
+		printf("Error reading file: %d, bytes to read: %d\n\r", res, btr);
+		return StorageInternalError;
+	}
+
+	if (id != result->ID)
+		return StorageInternalError;
+
+	return StorageNoError;
+}
+
+
+static void MakeFileName(uint32_t id, char *str)
+{
+	if (!str)
+		return ;
+
+	sprintf(str, "%08X.bin", (unsigned int)id);
 }
 
 /* ============================================= */
@@ -60,11 +126,11 @@ void PrintStorageStatus(void)
 	BYTE rByte;
 
 	if (disk_ioctl(0, GET_SECTOR_COUNT, &rLong) == RES_OK)
-		{ printf("Drive size: %u sectors\r\n", rLong); }
+		{ printf("Drive size: %u sectors\r\n", (unsigned int)rLong); }
 	if (disk_ioctl(0, GET_SECTOR_SIZE, &rWord) == RES_OK)
 		{ printf("Sector size: %u\r\n", rWord); }
 	if (disk_ioctl(0, GET_BLOCK_SIZE, &rLong) == RES_OK)
-		{ printf("Erase block size: %u sectors\r\n", rLong); }
+		{ printf("Erase block size: %u sectors\r\n", (unsigned int)rLong); }
 	if (disk_ioctl(0, MMC_GET_TYPE, &rByte) == RES_OK)
 		{ printf("MMC/SDC type: %u\r\n", rByte); }
 
@@ -82,12 +148,7 @@ void PrintStorageStatus(void)
 	}
 }
 
-FILINFO Finfo;
-
-static
-FRESULT scan_files (
-    char* path        /* Start node to be scanned (also used as work area) */
-)
+static FRESULT scan_files ( char* path)
 {
     FRESULT res;
     FILINFO fno;

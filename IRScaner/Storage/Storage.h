@@ -14,7 +14,7 @@ StorageStatus InitStorage(void);
 StorageStatus Save(IRCode *code);
 
 // Чтение из хранилища
-StorageStatus Open(const uint32_t id, IRCode *resutl);
+StorageStatus Open(const uint32_t id, IRCode *result);
 
 /* ============================================= */
 // Debug fucntions
@@ -25,6 +25,5 @@ void PrintStorageStatus(void);
 
 // Отображение содержимого хранилища
 void PrintConentStorage(void);
-
 
 #endif //__STORAGE__H__

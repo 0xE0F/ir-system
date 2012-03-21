@@ -62,7 +62,6 @@ int main(void)
 	{
 		print("Ok\n\r");
 		PrintStorageStatus();
-		PrintConentStorage();
 	}
 	else
 	{
@@ -81,6 +80,16 @@ int main(void)
 #endif
 	// set callback for Ctrl+C
 	microrl_set_sigint_callback (prl, sigint);
+
+//	while(1)
+//	{
+//		if (Save(&DebugCode) != StorageNoError)
+//			break;
+//		DebugCode.ID++;
+//		DebugCode.IntervalsCount++;
+//		printf("...%08d\n\r", DebugCode.ID);
+//	}
+
 	while (1)
 	{
 		uint8_t c;
@@ -168,6 +177,7 @@ static void InitUART(uint32_t baudrate)
 	NVIC_SetPriority(USART1_IRQn, 7);
 
 	USART_Cmd(USART1, ENABLE);
+	#pragma message "USART1 using as terminal"
 }
 
 static void InitLeds(void)
