@@ -109,7 +109,6 @@ static void InitCarrierTimer(void)
 	TIM_Cmd(TIM4, ENABLE);
 
 	_InitFlags |= _CarrierTimerInit;
-	#pragma message "IR transmitter using timer4 and GPIOB6 for carrier frequency generation"
 }
 
 static void InitTimers(void)
@@ -133,7 +132,6 @@ static void InitTimers(void)
 	NVIC_SetPriority(TIM7_IRQn, 2);
 
 	_InitFlags |= _WorkTimersInit;
-	#pragma message "IR transmitter using timer7 for timing IR codes"
 }
 
 // Установка несущей частоты
@@ -198,7 +196,6 @@ static void InitOuputChannel(void)
 	GPIO_Init(CHANNELS_PORT, &GPIO_InitStructure);
 
 	_InitFlags |= _OutputChannelInit;
-	#pragma message "IR transmitter using GPIOC6-9 as output channels"
 }
 
 // Выдача кода в соответствующий канал

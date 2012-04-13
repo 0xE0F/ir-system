@@ -19,8 +19,8 @@
 #include <Storage/ff.h>
 #include <Storage/diskio.h>
 #include <Storage/Storage.h>
+#include <NetWork/NetWork.h>
 
-// create microrl object and pointer on it
 microrl_t rl;
 microrl_t * prl = &rl;
 static RingBuffer *uartBuffer; // Буфер терминала
@@ -28,7 +28,7 @@ static RingBuffer *uartBuffer; // Буфер терминала
 IRCode DebugCode;	// Отладочный код
 
 static void InitLeds(void);
-static void InitUART(uint32_t baudrate);
+static void InitTerminalUART(uint32_t baudrate);
 
 inline void ReceiveLedOn(void) { GPIOC->BSRR |= GPIO_Pin_8;}
 inline void ReceiveLedOff(void) { GPIOC->BRR |= GPIO_Pin_8;}
@@ -53,8 +53,10 @@ int main(void)
 	}
 
 	uartBuffer = MakeRingBuffer(16);
+
 	InitLeds();
-	InitUART(115200);
+	InitTerminalUART(115200);
+	InitNetWork(9600, 0x1);
 
 	print("Initialization storage...");
 	tmp = InitStorage();
@@ -69,33 +71,21 @@ int main(void)
 		_CurrentState = CROPPED;
 	}
 
-	// call init with ptr to microrl instance and print callback
 	microrl_init (prl, print);
-	// set callback for execute
 	microrl_set_execute_callback (prl, execute);
 
 #ifdef _USE_COMPLETE
-	// set callback for completion
 	microrl_set_complite_callback (prl, complet);
 #endif
-	// set callback for Ctrl+C
 	microrl_set_sigint_callback (prl, sigint);
-
-//	while(1)
-//	{
-//		if (Save(&DebugCode) != StorageNoError)
-//			break;
-//		DebugCode.ID++;
-//		DebugCode.IntervalsCount++;
-//		printf("...%08d\n\r", DebugCode.ID);
-//	}
 
 	while (1)
 	{
 		uint8_t c;
-		// put received char from stdin to microrl lib
 		if ((!RB_IsEmpty(uartBuffer)) && RB_Read(uartBuffer, &c))
 			microrl_insert_char (prl, c);
+
+		NetWorkProcess();
 
 		switch(_CurrentState)
 		{
@@ -140,7 +130,7 @@ int main(void)
 	}
 }
 
-static void InitUART(uint32_t baudrate)
+static void InitTerminalUART(uint32_t baudrate)
 {
 	USART_InitTypeDef USART_InitStructure;
 	RCC_APB2PeriphClockCmd(RCC_APB2ENR_USART1EN, ENABLE);
@@ -177,7 +167,6 @@ static void InitUART(uint32_t baudrate)
 	NVIC_SetPriority(USART1_IRQn, 7);
 
 	USART_Cmd(USART1, ENABLE);
-	#pragma message "USART1 using as terminal"
 }
 
 static void InitLeds(void)

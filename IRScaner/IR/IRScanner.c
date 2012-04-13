@@ -71,7 +71,6 @@ static void InitEXTI(void)
 	EXTI_Init(&EXTI_InitStructure);
 
 	_InitFlags |= _EXTIInit;
-	#pragma message "IR scanner using GPIOC0 as External interrupt for TSOP"
 }
 
 static void InitTimers(void)
@@ -128,9 +127,6 @@ static void InitTimers(void)
 	NVIC_SetPriority(TIM3_IRQn, 3);
 
 	_InitFlags |= _WorkTimersInit;
-
-	#pragma message "IR scanner using GPIOA1 and timer2 channel 2 for pulse measurement"
-	#pragma message "IR scanner using timer3 for ir code measurement"
 }
 
 // Запись кода со сканера
