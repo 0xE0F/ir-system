@@ -6,13 +6,31 @@
 #include <stm32f10x_usart.h>
 
 #include "RingBuffer.h"
+#include <IR/IR.h>
 
 #include <NetWork/NetWork.h>
 
 static uint8_t _DevAddr = 0; 							/* Адрес устройства */
 
 static RingBuffer *_NetWorkBuffer;						/* Буфер данных устройства */
-static const uint32_t NetWorkBufferSize = 2048;			/* Размер буфера*/
+static const uint32_t NetWorkBufferSize = STORAGE_PAGE_SIZE + 1 + 1 + 2 + 2 + 2;			/* Размер буфера кода + заголовок команды (ADDR + CODE + PARAM + CRC16) */
+
+static NetworkState _State = Receive;
+
+static void SetMode(NetworkState state)
+{
+	if (state == Receive)
+	{
+		RX_TX_RECEIVE_MODE;
+	}
+	else
+	{
+		RX_TX_TRANSMIT_MODE;
+	}
+
+	RB_Clear(_NetWorkBuffer);
+	_State = state;
+}
 
 void InitNetWork(uint32_t baudrate, uint8_t address)
 {
@@ -55,15 +73,25 @@ void InitNetWork(uint32_t baudrate, uint8_t address)
 
 	USART_Cmd(USART2, ENABLE);
 }
-//if ((!RB_IsEmpty(busBuffer)) && RB_Read(busBuffer, &c))
-//	printf("%02X ", c);
 
 void USART2_IRQHandler(void)
 {
 	if (USART_GetITStatus(USART2, USART_IT_RXNE))
 	{
-		RB_Write(_NetWorkBuffer, USART_ReceiveData(USART2));
+		if (_State == Receive)
+			RB_Write(_NetWorkBuffer, USART_ReceiveData(USART2));
 		USART_ClearITPendingBit(USART2, USART_IT_RXNE);
+	}
+
+	if (USART_GetITStatus(USART2, USART_IT_TC))
+	{
+		if (_State == Transmit)
+		{
+			uint8_t ch;
+			if (RB_Read(_NetWorkBuffer, &ch))
+				USART_SendData(USART2, ch);
+		}
+		USART_ClearITPendingBit(USART2, USART_IT_TC);
 	}
 }
 
@@ -75,3 +103,12 @@ void NetWorkProcess(void)
 		USART_SendData(USART2, c);
 
 }
+
+// Передача данных в сеть.
+// Если возвращаемое значение не ноль - произошла ошибка (интерфейс занят, недействиетльный буффер, слишком большой размер данных)
+uint8_t Send(const uint8_t *pBuf, const uint32_t count)
+{
+
+	return 1;
+}
+

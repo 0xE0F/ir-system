@@ -269,7 +269,7 @@ static void SetNextPartOutInterval(void)
 
 void SetOutValueToChannel(const uint32_t channelId, const uint8_t value)
 {
-	#warning When you fix me ?
+	#warning When will you fix me ?
 
 	if (channelId == 0)
 	{

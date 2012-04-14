@@ -42,3 +42,9 @@ inline uint32_t RB_IsFull(RingBuffer *buffer)
 	return ((uint16_t)(buffer->_WriteIndex - buffer->_ReadIndex) & (uint16_t)~(buffer->_Mask)) != 0;
 }
 
+// Очистка буфера
+void RB_Clear(RingBuffer *buffer)
+{
+	buffer->_ReadIndex=0;
+	buffer->_WriteIndex=0;
+}

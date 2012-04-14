@@ -20,6 +20,7 @@
 #include <Storage/diskio.h>
 #include <Storage/Storage.h>
 #include <NetWork/NetWork.h>
+#include "PlcTimers.h"
 
 microrl_t rl;
 microrl_t * prl = &rl;
@@ -57,19 +58,21 @@ int main(void)
 	InitLeds();
 	InitTerminalUART(115200);
 	InitNetWork(9600, 0x1);
+	InitPlcTimers();
 
-	print("Initialization storage...");
-	tmp = InitStorage();
-	if (!tmp)
-	{
-		print("Ok\n\r");
-		PrintStorageStatus();
-	}
-	else
-	{
-		printf("Fail. Status: %d\n\r", (unsigned int)tmp);
-		_CurrentState = CROPPED;
-	}
+//	print("Initialization storage...");
+//	tmp = InitStorage();
+//	if (!tmp)
+//	{
+//		print("Ok\n\r");
+//		PrintStorageStatus();
+//	}
+//	else
+//	{
+//		printf("Fail. Status: %d\n\r", (unsigned int)tmp);
+//		_CurrentState = CROPPED;
+//	}
+
 
 	microrl_init (prl, print);
 	microrl_set_execute_callback (prl, execute);
@@ -86,7 +89,10 @@ int main(void)
 			microrl_insert_char (prl, c);
 
 		NetWorkProcess();
-
+		if (IsTimeoutEx(0, 5000))
+		{
+			ReceiveLedInv();
+		}
 		switch(_CurrentState)
 		{
 			case IDLE:
