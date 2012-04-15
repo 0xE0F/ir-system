@@ -1,3 +1,7 @@
+#define IR_SCANNER 2
+//#define IR_TRANSMITTER 1
+#define IR_DEVICE_TYPE IR_SCANNER
+
 #include <stm32f10x.h>
 #include <stm32f10x_rcc.h>
 #include <stm32f10x_gpio.h>
@@ -89,7 +93,7 @@ int main(void)
 			microrl_insert_char (prl, c);
 
 		NetWorkProcess();
-		if (IsTimeoutEx(0, 5000))
+		if (IsTimeoutEx(1, 5000))
 		{
 			ReceiveLedInv();
 		}

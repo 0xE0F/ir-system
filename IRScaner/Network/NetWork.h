@@ -17,7 +17,7 @@ void NetWorkProcess(void);
 
 // Передача данных в сеть.
 // Если возвращаемое значение не ноль - произошла ошибка (интерфейс занят, недействиетльный буффер, слишком большой размер данных)
-uint8_t Send(const uint8_t *pBuf, const uint32_t count);
+uint8_t Send(const uint8_t *pBuf, uint32_t count);
 
 // Состояние в сети
 typedef enum  { Receive, Transmit} NetworkState;
