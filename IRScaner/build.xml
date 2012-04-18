@@ -41,6 +41,7 @@
         <define name="STM32F10X_MD_VL"/>
         <define name="USE_STDPERIPH_DRIVER"/>
         <define name="__ASSEMBLY__"/>
+        <define name="DEVICE_IR_READER"/>
         <define name="STM32F100RB"/>
       </defineset>
       

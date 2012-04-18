@@ -13,6 +13,14 @@
 
 #include <NetWork/NetWork.h>
 
+#if defined DEVICE_IR_READER
+	static const uint8_t DeviceType = 2;
+#elif defined DEVICE_IR_WRITER
+	static const uint8_t DeviceType = 1;
+#else
+	#error "Device type not selected"
+#endif
+
 enum { RequestDeviceType = 0x0F };
 
 static uint8_t _DevAddr = 0; 							/* Адрес устройства */
@@ -154,7 +162,7 @@ void NetWorkProcess(void)
 
 					if (IsCrcValid(addr, func, crc))
 					{
-						uint8_t answer[] = {addr, RequestDeviceType, 2, 0, 0};
+						uint8_t answer[] = {addr, RequestDeviceType, DeviceType, 0, 0};
 						crc = Crc16(answer, 3);
 						answer[3] = crc & 0xFF;
 						answer[4] = (crc >> 8) & 0xFF;

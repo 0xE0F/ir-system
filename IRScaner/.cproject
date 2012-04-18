@@ -25,6 +25,7 @@
 						<entry flags="" kind="macro" name="STM32F10X_MD_VL" value=""/>
 						<entry flags="" kind="macro" name="USE_STDPERIPH_DRIVER" value=""/>
 						<entry flags="" kind="macro" name="__ASSEMBLY__" value=""/>
+						<entry flags="" kind="macro" name="DEVICE_IR_READER" value=""/>
 						<entry flags="" kind="macro" name="STM32F100RB" value=""/>
 					</externalSetting>
 				</externalSettings>
@@ -45,6 +46,7 @@
 				<pathentry kind="mac" name="STM32F10X_MD_VL" path="" value=""/>
 				<pathentry kind="mac" name="USE_STDPERIPH_DRIVER" path="" value=""/>
 				<pathentry kind="mac" name="__ASSEMBLY__" path="" value=""/>
+				<pathentry kind="mac" name="DEVICE_IR_READER" path="" value=""/>
 				<pathentry kind="mac" name="STM32F100RB" path="" value=""/>
 				<pathentry kind="out" path=""/>
 			</storageModule>
