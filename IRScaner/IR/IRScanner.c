@@ -25,27 +25,24 @@ static IRCode *_ScanningCode = NULL;
 static __IO uint32_t _IsScanning = 0;			// Флаг процесса сканирования
 
 static __IO uint32_t _CurrentTime = 0;			// Текущее время
-static const uint32_t TimeToStop = 5000000; 	// Время принудительной остановки, мкс
+static const uint32_t TimeToStop = 5000000; 	// Время принудительной остановки сканирования, мкс
 static const uint32_t TimeIncrement = 0xFFFF; 	// таймер включен на период в 1 мкс.
 
-static __IO uint16_t _IC2Value = 0;
-static __IO uint16_t _DutyCycle = 0;
-static __IO uint32_t _SharedFrequency = 0;
-static __IO uint32_t _DetectFrequency = 0;
+static __IO uint16_t AttemptCount = 0; 			/* Текущая попытка измерения частоты  */
+static const uint16_t AttemptCountMax = 5;		/* Число попыток для определения частоты */
+static __IO uint32_t DetectFrequency = InvalidFrequencyValue;	/* Обнаруженная частота */
+static __IO uint32_t CurrentFrequency = InvalidFrequencyValue;	/* Текущая определяемая частота */
 
 #define GET_IR_DATA_BIT ((GPIOC->IDR & GPIO_Pin_0) ? 0 : 1)
 
-// Инициализация внешних прерываний
-static void InitEXTI(void);
-
-// Инициализация рабочих таймеров
-static void InitTimers(void); //TIM2 - in, TIM3 - freq meas
-
+// ----------------------
 // Остановка сканирования
 static void StopScan();
 
 volatile uint32_t IsScanning() { return _IsScanning != 0; }
 
+// -------------------------------
+// Инициализация внешних прерваний
 static void InitEXTI(void)
 {
 	GPIO_InitTypeDef  GPIO_InitStructure;
@@ -73,6 +70,8 @@ static void InitEXTI(void)
 	_InitFlags |= _EXTIInit;
 }
 
+// --------------------------------------------
+// Инициализация таймеров и зависимой переферии
 static void InitTimers(void)
 {
 	/* Compute the prescaler value */
@@ -129,6 +128,7 @@ static void InitTimers(void)
 	_InitFlags |= _WorkTimersInit;
 }
 
+// ----------------------
 // Запись кода со сканера
 void Scan(IRCode *irCode)
 {
@@ -148,7 +148,8 @@ void Scan(IRCode *irCode)
 	SetValue(&(_ScanningCode->Intervals[_ScanningCode->IntervalsCount]), GET_IR_DATA_BIT);
 
 	_CurrentTime = 0;
-	_DetectFrequency = 0;
+	DetectFrequency = InvalidFrequencyValue;
+	AttemptCount = 0;
 
 	TIM_SetCounter(TIM2, 0);
 	TIM_SetCounter(TIM3, 0);
@@ -169,6 +170,7 @@ void Scan(IRCode *irCode)
 	_IsScanning = 1;
 }
 
+// ----------------
 // Остановка записи
 static void StopScan()
 {
@@ -182,13 +184,14 @@ static void StopScan()
 
 	if (_ScanningCode)
 	{
-		_ScanningCode->Frequency = GetFrequencyInterval(_DetectFrequency);
-		_ScanningCode->Flags = _DutyCycle;
+		_ScanningCode->Frequency = GetFrequencyInterval(DetectFrequency);
 	}
 
 	_IsScanning = 0;
 }
 
+// --------------------------
+// Прерывания от ИК приемника
 void EXTI0_IRQHandler()
 {
 	if ((_ScanningCode) && (_IsScanning))
@@ -213,7 +216,8 @@ void EXTI0_IRQHandler()
 			StopScan();
 		}
 	}
-	EXTI_ClearITPendingBit(EXTI_Line0);
+	//EXTI_ClearITPendingBit(EXTI_Line0);
+	EXTI->PR = EXTI_PR_PR0;
 }
 
 void TIM3_IRQHandler()
@@ -231,29 +235,34 @@ void TIM3_IRQHandler()
 	TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 }
 
+// -----------------------------------------
+// Прерывания от таймера - детектора частоты
 void TIM2_IRQHandler(void)
 {
-	/* Clear TIM2 Capture compare interrupt pending bit */
-  TIM_ClearITPendingBit(TIM2, TIM_IT_CC2);
+	TIM_ClearITPendingBit(TIM2, TIM_IT_CC2);	/* Clear TIM2 Capture compare interrupt pending bit */
+	uint16_t ic2Value = TIM_GetCapture2(TIM2);	/* Get the Input Capture value */
 
-  /* Get the Input Capture value */
-  _IC2Value = TIM_GetCapture2(TIM2);
-
-  if (_IC2Value != 0)
-  {
-    /* Duty cycle computation */
-    _DutyCycle = (TIM_GetCapture1(TIM2) * 100) / _IC2Value;
-
-    /* Frequency computation */
-    _SharedFrequency = SystemCoreClock / _IC2Value;
-    if ((_SharedFrequency > DetectFreqMin) && (_SharedFrequency < DetectFreqMax))
-    {
-    	_DetectFrequency = _SharedFrequency;
-    }
-  }
-  else
-  {
-    _DutyCycle = 0;
-    _SharedFrequency = 0;
-  }
+	if (ic2Value != 0)
+	{
+		uint32_t freq = GetFrequencyInterval(SystemCoreClock / ic2Value);	/* Frequency computation */
+		if (freq != InvalidFrequencyValue)
+		{
+			if (AttemptCount < AttemptCountMax)
+			{
+				AttemptCount = (freq == CurrentFrequency) ? AttemptCount + 1 : 0;
+				CurrentFrequency = freq;
+				if (AttemptCount >=  AttemptCountMax)
+					DetectFrequency = freq;
+			}
+		}
+		else
+		{
+			AttemptCount = 0;
+		}
+	}
+	else
+	{
+		CurrentFrequency = 0;
+		AttemptCount = 0;
+	}
 }

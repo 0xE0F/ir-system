@@ -59,10 +59,10 @@ int main(void)
 
 	uartBuffer = MakeRingBuffer(16);
 
-	InitLeds();
+//	InitLeds();
 	InitTerminalUART(115200);
-	InitNetWork(9600, 0x1);
-	InitPlcTimers();
+//	InitNetWork(9600, 0x1);
+//	InitPlcTimers();
 
 //	print("Initialization storage...");
 //	tmp = InitStorage();
@@ -92,11 +92,11 @@ int main(void)
 		if ((!RB_IsEmpty(uartBuffer)) && RB_Read(uartBuffer, &c))
 			microrl_insert_char (prl, c);
 
-		NetWorkProcess();
-		if (IsTimeoutEx(1, 5000))
-		{
-			ReceiveLedInv();
-		}
+//		NetWorkProcess();
+//		if (IsTimeoutEx(1, 5000))
+//		{
+//			ReceiveLedInv();
+//		}
 		switch(_CurrentState)
 		{
 			case IDLE:

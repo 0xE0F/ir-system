@@ -28,7 +28,7 @@ typedef struct
 #error Size of IRCode NOT EQUAL STORAGE_PAGE_SIZE
 #endif
 
-//enum { InvalidFrequencyValue = 0 };
+enum { InvalidFrequencyValue = 0 };
 
 // Минимально детектируемая частота
 extern const uint32_t DetectFreqMin;

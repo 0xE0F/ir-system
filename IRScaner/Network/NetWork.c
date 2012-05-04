@@ -86,7 +86,7 @@ void InitNetWork(uint32_t baudrate, uint8_t address)
 	USART_InitStructure.USART_WordLength = 8;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
 
-	cbInit(&_NetWorkBuffer, NetWorkBufferSize);
+//	cbInit(&_NetWorkBuffer, NetWorkBufferSize);
 	_DevAddr = address;
 
 	USART_Init(USART2, &USART_InitStructure);
