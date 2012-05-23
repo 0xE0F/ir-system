@@ -43,9 +43,11 @@ inline void TransmitLedOn(void) { GPIOC->BSRR |= GPIO_Pin_9;}
 inline void TransmitLedOff(void) { GPIOC->BRR |= GPIO_Pin_9;}
 inline void TransmitLedInv(void) { GPIOC->ODR ^= GPIO_Pin_9;}
 
-enum CurrentState { IDLE, SCANNING, TRANSMITTING, CROPPED};
+enum ScanState { IDLE, FIRST_SCAN, SECOND_SCAN, COMPARE};
 
-static enum CurrentState _CurrentState = IDLE;
+static enum ScanState State = IDLE;
+
+void ProcessScan(void);
 
 int main(void)
 {
@@ -59,7 +61,7 @@ int main(void)
 
 	uartBuffer = MakeRingBuffer(16);
 
-//	InitLeds();
+	InitLeds();
 	InitTerminalUART(115200);
 //	InitNetWork(9600, 0x1);
 //	InitPlcTimers();
@@ -97,46 +99,46 @@ int main(void)
 //		{
 //			ReceiveLedInv();
 //		}
-		switch(_CurrentState)
-		{
-			case IDLE:
-				if (IsScanning())
-				{
-					ReceiveLedOn();
-					_CurrentState = SCANNING;
-					print("Scanning ...\r\n");
-				}
-				if (IsTransmitting())
-				{
-					TransmitLedOn();
-					print("Transmitting ...");
-					_CurrentState = TRANSMITTING;
-				}
-				break;
-
-			case SCANNING:
-				if (!IsScanning())
-				{
-					_CurrentState = IDLE;
-					ReceiveLedOff();
-					DebugPrint(&DebugCode);
-					printf("Done\r\n");
-				}
-				break;
-
-			case TRANSMITTING:
-				if (!IsTransmitting())
-				{
-					_CurrentState = IDLE;
-					TransmitLedOff();
-					printf("done.\r\n");
-				}
-				break;
-			case CROPPED:
-				break;
-			default:
-				break;
-		}
+//		switch(_CurrentState)
+//		{
+//			case IDLE:
+//				if (IsScanning())
+//				{
+//					ReceiveLedOn();
+//					_CurrentState = SCANNING;
+//					print("Scanning ...\r\n");
+//				}
+//				if (IsTransmitting())
+//				{
+//					TransmitLedOn();
+//					print("Transmitting ...");
+//					_CurrentState = TRANSMITTING;
+//				}
+//				break;
+//
+//			case SCANNING:
+//				if (!IsScanning())
+//				{
+//					_CurrentState = IDLE;
+//					ReceiveLedOff();
+//					DebugPrint(&DebugCode);
+//					printf("Done\r\n");
+//				}
+//				break;
+//
+//			case TRANSMITTING:
+//				if (!IsTransmitting())
+//				{
+//					_CurrentState = IDLE;
+//					TransmitLedOff();
+//					printf("done.\r\n");
+//				}
+//				break;
+//			case CROPPED:
+//				break;
+//			default:
+//				break;
+//		}
 	}
 }
 
@@ -219,4 +221,13 @@ RAMFUNC void SysTick_Handler(void)
 		cntdiskio = 0;
 		disk_timerproc(); /* to be called every 10ms */
 	}
+}
+
+void ProcessScan(void)
+{
+//	switch(State)
+//	{
+//		case IDLE:
+//			break;
+//	}
 }
