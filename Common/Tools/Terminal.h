@@ -18,12 +18,5 @@ char ** complet (int argc, const char * const * argv);
 // ctrl+c callback
 void sigint (void);
 
-#define MaxIntervals 512
-
-typedef struct
-{
-	uint32_t Time;
-	uint32_t Value;
-} _TimeInterval;
 
 #endif

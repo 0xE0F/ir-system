@@ -27,6 +27,8 @@ const uint32_t ValueMask = 0x80000000; /* ћаска значени€ */
 
 extern signed int printf(const char *pFormat, ...);
 
+uint32_t min(uint32_t l, uint32_t r) { return (l < r) ? l : r ; }
+
 // ѕолучение стандартной частоты из интервала 30 к√ц - 60 к√ц
 // 0 - вне диапазона
 uint32_t GetFrequencyInterval(uint32_t value)

@@ -26,7 +26,7 @@ enum { RequestDeviceType = 0x0F };
 static uint8_t _DevAddr = 0; 							/* Адрес устройства */
 
 static CircularBuffer _NetWorkBuffer;						/* Буфер данных устройства */
-static const uint32_t NetWorkBufferSize = STORAGE_PAGE_SIZE + 1 + 1 + 2 + 2 + 2;			/* Размер буфера кода + заголовок команды (ADDR + CODE + PARAM + CRC16) */
+static const uint32_t NetWorkBufferSize = 0; //STORAGE_PAGE_SIZE + 1 + 1 + 2 + 2 + 2;			/* Размер буфера кода + заголовок команды (ADDR + CODE + PARAM + CRC16) */
 
 static NetworkState _State = Receive;		/* Текущее состояние */
 

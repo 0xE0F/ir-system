@@ -8,24 +8,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <../Microrl/microrl.h>
-#include "Terminal.h"
+#include <Terminal.h>
 #include <../IR/IR.h>
-#include <../IR/IRScanner.h>
-#include <../IR/IRTransmitter.h>
+#include <IRScanner.h>
+#include <RingBuffer.h>
 
-#include "RingBuffer.h"
-
-//#include <Storage/ffconf.h>
-//#include <Storage/ff.h>
-//#include <Storage/diskio.h>
-//#include <Storage/Storage.h>
 #include <../NetWork/NetWork.h>
-#include "PlcTimers.h"
+#include <PlcTimers.h>
 
-microrl_t rl;
-microrl_t * prl = &rl;
-static RingBuffer *uartBuffer; // Буфер терминала
-
+static microrl_t rl;
+static microrl_t * prl = &rl;
+static CircularBuffer terminalBuffer; // Буфер терминала
+static const unsigned TerminalBufferSize = 16;
 IRCode DebugCode;	// Отладочный код
 
 static void InitLeds(void);
@@ -39,99 +33,32 @@ inline void TransmitLedOn(void) { GPIOC->BSRR |= GPIO_Pin_9;}
 inline void TransmitLedOff(void) { GPIOC->BRR |= GPIO_Pin_9;}
 inline void TransmitLedInv(void) { GPIOC->ODR ^= GPIO_Pin_9;}
 
-enum ScanState { IDLE, FIRST_SCAN, SECOND_SCAN, COMPARE, SCANNING, TRANSMITTING};
-
-static enum ScanState State = IDLE;
-
 void ProcessScan(void);
 
-int main(void)
+void InitTerminal(uint32_t baudrate)
 {
-	uint32_t tmp;
+	cbInit(&terminalBuffer, TerminalBufferSize);
 
-	/* Setup SysTick Timer for 1 millisecond interrupts, also enables Systick and Systick-Interrupt */
-//	if (SysTick_Config(SystemCoreClock / 1000))
-//	{
-//		while (1);
-//	}
-
-	uartBuffer = MakeRingBuffer(16);
-
-	InitLeds();
-	InitTerminalUART(115200);
-//	InitNetWork(9600, 0x1);
-//	InitPlcTimers();
-
-//	print("Initialization storage...");
-//	tmp = InitStorage();
-//	if (!tmp)
-//	{
-//		print("Ok\n\r");
-//		PrintStorageStatus();
-//	}
-//	else
-//	{
-//		printf("Fail. Status: %d\n\r", (unsigned int)tmp);
-//		_CurrentState = CROPPED;
-//	}
-
+	InitTerminalUART(baudrate);
 
 	microrl_init (prl, print);
 	microrl_set_execute_callback (prl, execute);
-
-#ifdef _USE_COMPLETE
 	microrl_set_complite_callback (prl, complet);
-#endif
 	microrl_set_sigint_callback (prl, sigint);
+}
+
+int main(void)
+{
+	InitTerminal(115200);
+	InitLeds();
 
 	while (1)
 	{
-		uint8_t c;
-		if ((!RB_IsEmpty(uartBuffer)) && RB_Read(uartBuffer, &c))
-			microrl_insert_char (prl, c);
-
-//		NetWorkProcess();
-//		if (IsTimeoutEx(1, 5000))
-//		{
-//			ReceiveLedInv();
-//		}
-		switch(State)
+		if (!cbIsEmpty(&terminalBuffer))
 		{
-			case IDLE:
-				if (IsScanning())
-				{
-					ReceiveLedOn();
-					State = SCANNING;
-					print("Scanning ...\r\n");
-				}
-				if (IsTransmitting())
-				{
-					TransmitLedOn();
-					print("Transmitting ...");
-					State = TRANSMITTING;
-				}
-				break;
-
-			case SCANNING:
-				if (!IsScanning())
-				{
-					State = IDLE;
-					ReceiveLedOff();
-					DebugPrint(&DebugCode);
-					printf("Done\r\n");
-				}
-				break;
-
-			case TRANSMITTING:
-				if (!IsTransmitting())
-				{
-					State = IDLE;
-					TransmitLedOff();
-					printf("done.\r\n");
-				}
-				break;
-			default:
-				break;
+			uint8_t c;
+			cbRead(&terminalBuffer, &c);
+			microrl_insert_char (prl, c);
 		}
 	}
 }
@@ -190,7 +117,8 @@ static void InitLeds(void)
 
 void USART1_IRQHandler(void)
 {
-	RB_Write(uartBuffer, USART_ReceiveData(USART1));
+	uint8_t ch = USART_ReceiveData(USART1);
+	cbWrite(&terminalBuffer, &ch);
 	USART_ClearITPendingBit(USART1, USART_IT_RXNE);
 }
 
