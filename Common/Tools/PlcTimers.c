@@ -4,8 +4,9 @@
 
 #include "PlcTimers.h"
 
-static uint32_t _Timers[TIMERS_COUNT];
+enum { TimersCount = 4};	/* Количество PLC таймеров */
 
+static uint32_t _Timers[TimersCount];
 
 // Инициализация тамеров
 void InitPlcTimers(void)
@@ -39,7 +40,7 @@ uint8_t IsTimeoutEx(const uint8_t timerId, const uint32_t reloadValue)
 {
 	uint8_t res = 0;
 
-	if (timerId >= TIMERS_COUNT)
+	if (timerId >= TimersCount)
 		return res;
 
 	uint32_t oldValue;
@@ -62,7 +63,7 @@ uint8_t IsTimeoutEx(const uint8_t timerId, const uint32_t reloadValue)
 // Установка значения таймера
 void SetTimerValue(const uint8_t timerId, const uint32_t value)
 {
-	if (timerId >= TIMERS_COUNT)
+	if (timerId >= TimersCount)
 		return;
 	do
 	{
@@ -75,7 +76,7 @@ void TIM6_DAC_IRQHandler()
 	if (TIM_GetITStatus(TIM6, TIM_IT_Update) != RESET)
 	{
 		TIM_ClearITPendingBit(TIM6, TIM_IT_Update);
-		for (uint32_t i=0; i < TIMERS_COUNT; i++)
+		for (uint32_t i=0; i < TimersCount; i++)
 		{
 			if (_Timers[i] != 0)
 				_Timers[i]--;

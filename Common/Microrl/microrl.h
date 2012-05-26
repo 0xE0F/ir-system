@@ -73,14 +73,14 @@ typedef struct {
 	char const * tkn_arr [_COMMAND_TOKEN_NMB];                       // array of token for call 'execute' callback
 	int (*execute) (int argc, const char * const * argv );           // ptr to 'execute' callback
 	char ** (*get_completion) (int argc, const char * const * argv ); // ptr to 'completion' callback
-	void (*print) (char *);                                          // ptr to 'print' callback
+	void (*print) (const char *);                                          // ptr to 'print' callback
 #ifdef _USE_CTLR_C
 	void (*sigint) (void);
 #endif
 } microrl_t;
 
 // init internal data, calls once at start up
-void microrl_init (microrl_t * this, void (*print)(char*));
+void microrl_init (microrl_t * this, void (*print)(const char*));
 
 // set echo mode (true/false), using for disabling echo for password input
 // echo mode will enabled after user press Enter.

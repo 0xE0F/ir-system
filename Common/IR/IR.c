@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <math.h>
 
@@ -17,15 +18,17 @@ static const uint32_t StandartFrequency[] = {30000, 32000, 34000, 36000, 38000, 
 // Длина буфера стандартных частот
 static const uint32_t StandartFrequencyCount = sizeof(StandartFrequency) / sizeof(uint32_t);
 
-static const uint32_t LengthDelataMax = 20; 		/* Максимальная разница в длине кодов */
+uint32_t LengthDelataMax = 20; 		/* Максимальная разница в длине кодов */
 
-static const uint32_t IntervalDelataMax = 777;	/* Максимальная разница между интервалами */
+uint32_t IntervalDelataMax = 500;	/* Максимальная разница между интервалами */
 
 const uint32_t TimeMask = 0x7FFFFFFF;	/* Маска времени */
 
 const uint32_t ValueMask = 0x80000000; /* Маска значения */
 
 extern signed int printf(const char *pFormat, ...);
+
+bool DebugModeIr = false; /* Флаг отладочного режима */
 
 uint32_t min(uint32_t l, uint32_t r) { return (l < r) ? l : r ; }
 
@@ -87,53 +90,74 @@ void DebugPrint(IRCode *code)
 	{
 		printf("[%03u] %01X -> [%08u us]\n\r", (unsigned int)i, (unsigned char)GetValue(code->Intervals[i]), (unsigned int)GetTime(code->Intervals[i]));
 	}
-	printf("==> ");
+	printf("\n\r");
 }
 
-CheckStatus CheckIRCode(IRCode *code)
+bool CheckIRCode(IRCode *code)
 {
 	if (!code)
-		return CS_ERROR;
+		return false;
 
 	if (code->IntervalsCount >= INTERVALS_MAX)
-		return CS_ERROR;
+		return false;
 
 	if ((code->Frequency < DetectFreqMin) || (code->Frequency > DetectFreqMax))
-		return CS_ERROR;
+		return false;
 
 	if ((code->Frequency < 36000) || (code->Frequency >38000))
-		return CS_WARNING;
+		return false;
 
-	return CS_OK;
+	return true;
 }
 
-uint8_t CompareIrCode(IRCode *left, IRCode *rigth)
+bool IsEqual(IRCode *left, IRCode *rigth)
 {
-	if (!left)
-		return FirstEmpty;
-	if (!rigth)
-		return SecondEmpty;
+	if (DebugModeIr)
+	{
+		printf("\n\r");
+		if (left)
+			printf("Id:0x%08X  Flags:0x%08X  Freq:%05u  Count:%u\n\r", (unsigned int)left->ID, (unsigned int)left->Flags, (unsigned int)left->Frequency, (unsigned int)left->IntervalsCount);
+		if (rigth)
+			printf("Id:0x%08X  Flags:0x%08X  Freq:%05u  Count:%u\n\r", (unsigned int)rigth->ID, (unsigned int)rigth->Flags, (unsigned int)rigth->Frequency, (unsigned int)rigth->IntervalsCount);
+	}
+
+	if (!CheckIRCode(left))
+		return false;
+
+	if (!CheckIRCode(rigth))
+		return false;
 
 	if (abs(left->IntervalsCount - rigth->IntervalsCount) > LengthDelataMax)
-		return LengthNotEqual;
+		return false;
 
 	if (left->Frequency != rigth->Frequency)
-		return FreqNotEqual;
+		return false;
 
+	uint32_t difference = 0;
 	uint32_t intervalsDiff = 0;
+
 	const uint32_t intervalsCount = min(left->IntervalsCount, rigth->IntervalsCount);
 	for (uint32_t i = 0; i < intervalsCount; i++)
 	{
-		if (GetValue(left->Intervals[i]) != GetValue(rigth->Intervals[i]))
-			return CodesValueNotEqual;
-
 		intervalsDiff = abs(GetTime(left->Intervals[i]) - GetTime(rigth->Intervals[i]));
+		if (DebugModeIr)
+			printf("%01u:%08u    %01u:%08u    D:%u", (unsigned int)GetValue(left->Intervals[i]), (unsigned int)GetTime(left->Intervals[i]), (unsigned int)GetValue(rigth->Intervals[i]), (unsigned int)GetTime(rigth->Intervals[i]), (unsigned int)intervalsDiff);
+
+		if (GetValue(left->Intervals[i]) != GetValue(rigth->Intervals[i]))
+		{
+			difference++;
+			if (DebugModeIr) printf("  !");
+		}
+
 		if ( intervalsDiff > IntervalDelataMax )
 		{
-			printf("[%u] delta: %u\tleft: %u\trigth: %u\n\r", i, intervalsDiff, GetTime(left->Intervals[i]), GetTime(rigth->Intervals[i]));
-			return CodesIntervalNotEqual;
+			difference++;
+			if (DebugModeIr) printf("  *");
 		}
+		if (DebugModeIr) printf("\n\r");
 	}
 
-	return CodesEqual;
+	if (DebugModeIr) printf("Diff: %u\n\r", (unsigned int) difference);
+
+	return (difference == 0);
 }

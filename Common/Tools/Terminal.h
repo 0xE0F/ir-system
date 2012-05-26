@@ -4,7 +4,7 @@
 extern signed int printf(const char *pFormat, ...);
 
 // print to stream callback
-void print (char * str);
+void print (const char * str);
 
 // get_char from stream
 char get_char (void);

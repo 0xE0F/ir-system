@@ -26,28 +26,31 @@ IRCode IrCodes[2];
 
 /* Рабочие состояния */
 enum States { Idle, Start, ScanFirst, WaitFirst, ScanSecond, WaitSecond, Check, SendCode, WaitSend};
+static enum States State = Idle; /* Текущее состояние */
 
-static enum States State = Idle;
+bool BlinkIrReceiveLed = false;
+bool BlinkIrScanCompliteLed = false;
 
+static void InitLeds(void);
+static void InitTerminalUART(uint32_t baudrate);
+
+inline void IrReceiveLedOn(void) { GPIOC->BSRR |= GPIO_Pin_8;}
+inline void IrReceiveLedOff(void) { GPIOC->BRR |= GPIO_Pin_8;}
+inline void IrReceiveLedInv(void) { GPIOC->ODR ^= GPIO_Pin_8;}
+
+inline void IrScanCompliteLedOn(void) { GPIOC->BSRR |= GPIO_Pin_9;}
+inline void IrScanCompliteLedOff(void) { GPIOC->BRR |= GPIO_Pin_9;}
+inline void IrScanCompliteLedInv(void) { GPIOC->ODR ^= GPIO_Pin_9;}
+
+void ProcessScan(void);
+
+/* Запуск проесса сканирования */
 void RunScan(void)
 {
 	if (State != Idle)
 		return;
 	State = Start;
 }
-
-static void InitLeds(void);
-static void InitTerminalUART(uint32_t baudrate);
-
-inline void ReceiveLedOn(void) { GPIOC->BSRR |= GPIO_Pin_8;}
-inline void ReceiveLedOff(void) { GPIOC->BRR |= GPIO_Pin_8;}
-inline void ReceiveLedInv(void) { GPIOC->ODR ^= GPIO_Pin_8;}
-
-inline void TransmitLedOn(void) { GPIOC->BSRR |= GPIO_Pin_9;}
-inline void TransmitLedOff(void) { GPIOC->BRR |= GPIO_Pin_9;}
-inline void TransmitLedInv(void) { GPIOC->ODR ^= GPIO_Pin_9;}
-
-void ProcessScan(void);
 
 /* Инициализация терминала */
 void InitTerminal(uint32_t baudrate)
@@ -65,7 +68,9 @@ void InitTerminal(uint32_t baudrate)
 int main(void)
 {
 	InitTerminal(115200);
+	InitPlcTimers();
 	InitLeds();
+
 
 	while (1)
 	{
@@ -139,34 +144,15 @@ void USART1_IRQHandler(void)
 	USART_ClearITPendingBit(USART1, USART_IT_RXNE);
 }
 
-//RAMFUNC void SysTick_Handler(void)
-//{
-//	static uint16_t cnt=0;
-//	static uint8_t flip=0, cntdiskio=0;
-//
-//	cnt++;
-//	if( cnt >= 500 ) {
-//		cnt = 0;
-//		/* alive sign */
-//		if ( flip ) {
-//			GPIOC->BSRR |= GPIO_Pin_9;
-//		} else {
-//			GPIOC->BRR |= GPIO_Pin_9;		}
-//		flip = !flip;
-//	}
-//
-//	cntdiskio++;
-//	if ( cntdiskio >= 10 ) {
-//		cntdiskio = 0;
-//		disk_timerproc(); /* to be called every 10ms */
-//	}
-//}
-
 void ProcessScan(void)
 {
 	switch(State)
 	{
 		case Idle:
+			BlinkIrReceiveLed = false;
+			BlinkIrScanCompliteLed = false;
+			IrReceiveLedOff();
+			IrScanCompliteLedOff();
 			break;
 
 		case Start:
@@ -178,6 +164,7 @@ void ProcessScan(void)
 
 		case ScanFirst:
 		{
+			BlinkIrReceiveLed = true;
 			Scan(&(IrCodes[0]));
 			State = WaitFirst;
 			printf("\tWaiting first code...");
@@ -188,12 +175,15 @@ void ProcessScan(void)
 			if (!IsScanning())
 			{
 				State = ScanSecond;
+				BlinkIrReceiveLed = false;
+				IrReceiveLedOn();
 				printf("done\n\r");
 			}
 			break;
 
 		case ScanSecond:
 		{
+			BlinkIrScanCompliteLed = true;
 			Scan(&(IrCodes[1]));
 			State = WaitSecond;
 			printf("\tWaiting second code...");
@@ -204,17 +194,24 @@ void ProcessScan(void)
 			if (!IsScanning())
 			{
 				State = Check;
+				BlinkIrScanCompliteLed = false;
+				IrScanCompliteLedOn();
 				printf("done\n\r");
 			}
 			break;
 
 		case Check:
 		{
-			uint8_t cmp;
-			printf("\tCheck IR codes...");
-			cmp = CompareIrCode(&(IrCodes[0]), &(IrCodes[1]));
-			printf("%u\n\r", cmp);
+			bool cmp = false;
+			printf("\tCheck IR codes: ");
+			cmp = IsEqual(&(IrCodes[0]), &(IrCodes[1]));
+			printf("%s\n\r", cmp ? "Equal" : "Error");
 			State = SendCode;
+			if (!cmp)
+			{
+				IrReceiveLedOff();
+				IrScanCompliteLedOff();
+			}
 			break;
 		}
 
@@ -230,6 +227,14 @@ void ProcessScan(void)
 
 		default:
 			break;
-
 	}
+
+	if (IsTimeoutEx(BLINK_TIMER, BLINK_VALUE))
+	{
+		if (BlinkIrReceiveLed)
+			IrReceiveLedInv();
+		if (BlinkIrScanCompliteLed)
+			IrScanCompliteLedInv();
+	}
+
 }

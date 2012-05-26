@@ -30,10 +30,13 @@ typedef struct
 
 enum { InvalidFrequencyValue = 0 };
 
-// Минимально детектируемая частота
-extern const uint32_t DetectFreqMin;
-// Максимально детектируемая частота
-extern const uint32_t DetectFreqMax;
+extern const uint32_t DetectFreqMin; /* Минимально детектируемая частота */
+extern const uint32_t DetectFreqMax; /* Максимальная детектируемая частота */
+
+extern uint32_t LengthDelataMax; 		/* Максимальная разница в длине кодов */
+extern uint32_t IntervalDelataMax;	/* Максимальная разница между интервалами */
+
+extern bool DebugModeIr; /* Режим отладки ИК кодов */
 
 // Получение стандартной частоты из интервала 30 кГц - 60 кГц
 uint32_t GetFrequencyInterval(uint32_t value);
@@ -50,16 +53,10 @@ uint32_t GetTime(uint32_t interval);
 // Получение значения интервала
 uint8_t GetValue(uint32_t interval);
 
-// отладчный вывод кода
-void DebugPrint(IRCode *code);
+bool CheckIRCode(IRCode *code); /* Проверка на допустимость кода */
 
-typedef enum  { CS_OK, CS_ERROR, CS_WARNING} CheckStatus;
-// Проверка кода
-CheckStatus CheckIRCode(IRCode *code);
+bool IsEqual(IRCode *left, IRCode *rigth); /* Сравнение двух кодов */
 
-// Тип - результат сравнения кодов
-typedef enum {CodesEqual = 0, FirstEmpty, SecondEmpty, LengthNotEqual, CodesValueNotEqual, CodesIntervalNotEqual, FreqNotEqual} CompareCodesResult;
+void DebugPrint(IRCode *code); 	/* отладчный вывод кода */
 
-// Сравнение кодов
-CompareCodesResult CompareIrCode(IRCode *left, IRCode *rigth);
 #endif // __IR__H__

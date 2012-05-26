@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 
 #include <stm32f10x.h>
 #include <stm32f10x_gpio.h>
@@ -6,6 +7,7 @@
 #include <stm32f10x_usart.h>
 
 #include "RingBuffer.h"
+
 #include <../IR/IR.h>
 #include <PlcTimers.h>
 #include <Crc.h>

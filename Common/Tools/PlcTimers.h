@@ -4,12 +4,14 @@
 #ifndef __PLC__TIMERS__H__
 #define __PLC__TIMERS__H__
 
-#define TIMERS_COUNT 4	/* Количество PLC таймеров */
 
 #define PLC_TIMER_PERIOD	0.0001	/* Разрешение программного таймера */
 
 #define RX_TIMEOUT_TIMER 0			/* Индекс таймера приема */
 #define RX_TIMEOUT_VALUE (0.005 / PLC_TIMER_PERIOD) /* 5 мс - таймаут приема данных */
+
+#define BLINK_TIMER 1			/* Индекс таймера мигания */
+#define BLINK_VALUE (0.25 / PLC_TIMER_PERIOD) /* 250 мс - интервал мигания  */
 
 /* Инициализация тамеров */
 void InitPlcTimers(void);
