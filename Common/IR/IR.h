@@ -58,7 +58,7 @@ typedef enum  { CS_OK, CS_ERROR, CS_WARNING} CheckStatus;
 CheckStatus CheckIRCode(IRCode *code);
 
 // Тип - результат сравнения кодов
-typedef enum {CodesEqual = 0, FirstEmpty, SecondEmpty, LengthNotEqual, CodesNotEqual, FreqNotEqual} CompareCodesResult;
+typedef enum {CodesEqual = 0, FirstEmpty, SecondEmpty, LengthNotEqual, CodesValueNotEqual, CodesIntervalNotEqual, FreqNotEqual} CompareCodesResult;
 
 // Сравнение кодов
 CompareCodesResult CompareIrCode(IRCode *left, IRCode *rigth);

@@ -11,6 +11,7 @@
 #include <Terminal.h>
 
 extern void PrintChar(const char c);
+extern void RunScan(void);
 
 #define _STM_32_VRESION_ "1.0"
 
@@ -28,7 +29,7 @@ char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_SCAN, _CMD_PRINT};
 char * compl_world [_NUM_OF_CMD + 1];
 
 
-extern IRCode DebugCode;
+extern IRCode IrCodes[];
 
 //*****************************************************************************
 void print (char * str)
@@ -79,11 +80,12 @@ int execute (int argc, const char * const * argv)
 		}
 		else if (strcmp (argv[i], _CMD_SCAN) == 0)
 		{
-			Scan(&DebugCode);
+			//Scan(&IrCodes);
+			RunScan();
 			return 0;
 		} else if (strcmp (argv[i], _CMD_PRINT) == 0)
 		{
-			DebugPrint(&DebugCode);
+			//DebugPrint(&IrCodes);
 			return 0;
 		}
 		else {

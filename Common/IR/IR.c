@@ -17,9 +17,9 @@ static const uint32_t StandartFrequency[] = {30000, 32000, 34000, 36000, 38000, 
 // Длина буфера стандартных частот
 static const uint32_t StandartFrequencyCount = sizeof(StandartFrequency) / sizeof(uint32_t);
 
-static const uint32_t LengthDelataMax = 5; 		/* Максимальная разница в длине кодов */
+static const uint32_t LengthDelataMax = 20; 		/* Максимальная разница в длине кодов */
 
-static const uint32_t IntervalDelataMax = 50;	/* Максимальная разница между интервалами */
+static const uint32_t IntervalDelataMax = 777;	/* Максимальная разница между интервалами */
 
 const uint32_t TimeMask = 0x7FFFFFFF;	/* Маска времени */
 
@@ -120,13 +120,19 @@ uint8_t CompareIrCode(IRCode *left, IRCode *rigth)
 	if (left->Frequency != rigth->Frequency)
 		return FreqNotEqual;
 
+	uint32_t intervalsDiff = 0;
 	const uint32_t intervalsCount = min(left->IntervalsCount, rigth->IntervalsCount);
 	for (uint32_t i = 0; i < intervalsCount; i++)
 	{
 		if (GetValue(left->Intervals[i]) != GetValue(rigth->Intervals[i]))
-			return CodesNotEqual;
-		if (GetTime(left->Intervals[i]) != GetTime(rigth->Intervals[i]))
-			return CodesNotEqual;
+			return CodesValueNotEqual;
+
+		intervalsDiff = abs(GetTime(left->Intervals[i]) - GetTime(rigth->Intervals[i]));
+		if ( intervalsDiff > IntervalDelataMax )
+		{
+			printf("[%u] delta: %u\tleft: %u\trigth: %u\n\r", i, intervalsDiff, GetTime(left->Intervals[i]), GetTime(rigth->Intervals[i]));
+			return CodesIntervalNotEqual;
+		}
 	}
 
 	return CodesEqual;

@@ -6,6 +6,8 @@
 #include <stm32f10x_usart.h>
 
 #include <stdio.h>
+#include <stdbool.h>
+
 #include <string.h>
 #include <../Microrl/microrl.h>
 #include <Terminal.h>
@@ -18,9 +20,21 @@
 
 static microrl_t rl;
 static microrl_t * prl = &rl;
-static CircularBuffer terminalBuffer; // Буфер терминала
+static CircularBuffer terminalBuffer; /* Буфер терминала */
 static const unsigned TerminalBufferSize = 16;
-IRCode DebugCode;	// Отладочный код
+IRCode IrCodes[2];
+
+/* Рабочие состояния */
+enum States { Idle, Start, ScanFirst, WaitFirst, ScanSecond, WaitSecond, Check, SendCode, WaitSend};
+
+static enum States State = Idle;
+
+void RunScan(void)
+{
+	if (State != Idle)
+		return;
+	State = Start;
+}
 
 static void InitLeds(void);
 static void InitTerminalUART(uint32_t baudrate);
@@ -35,6 +49,7 @@ inline void TransmitLedInv(void) { GPIOC->ODR ^= GPIO_Pin_9;}
 
 void ProcessScan(void);
 
+/* Инициализация терминала */
 void InitTerminal(uint32_t baudrate)
 {
 	cbInit(&terminalBuffer, TerminalBufferSize);
@@ -60,6 +75,8 @@ int main(void)
 			cbRead(&terminalBuffer, &c);
 			microrl_insert_char (prl, c);
 		}
+
+		ProcessScan();
 	}
 }
 
@@ -147,9 +164,72 @@ void USART1_IRQHandler(void)
 
 void ProcessScan(void)
 {
-//	switch(State)
-//	{
-//		case IDLE:
-//			break;
-//	}
+	switch(State)
+	{
+		case Idle:
+			break;
+
+		case Start:
+		{
+			State = ScanFirst;
+			printf("Start scan IR code:\n\r");
+			break;
+		}
+
+		case ScanFirst:
+		{
+			Scan(&(IrCodes[0]));
+			State = WaitFirst;
+			printf("\tWaiting first code...");
+			break;
+		}
+
+		case WaitFirst:
+			if (!IsScanning())
+			{
+				State = ScanSecond;
+				printf("done\n\r");
+			}
+			break;
+
+		case ScanSecond:
+		{
+			Scan(&(IrCodes[1]));
+			State = WaitSecond;
+			printf("\tWaiting second code...");
+			break;
+		}
+
+		case WaitSecond:
+			if (!IsScanning())
+			{
+				State = Check;
+				printf("done\n\r");
+			}
+			break;
+
+		case Check:
+		{
+			uint8_t cmp;
+			printf("\tCheck IR codes...");
+			cmp = CompareIrCode(&(IrCodes[0]), &(IrCodes[1]));
+			printf("%u\n\r", cmp);
+			State = SendCode;
+			break;
+		}
+
+		case SendCode:
+			State = WaitSend;
+			printf("\tSending IR code...");
+			break;
+
+		case WaitSend:
+			State = Idle;
+			printf("OK\n\r");
+			break;
+
+		default:
+			break;
+
+	}
 }
