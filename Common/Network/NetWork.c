@@ -15,24 +15,17 @@
 
 #include <../NetWork/NetWork.h>
 
-#if defined DEVICE_IR_READER
-	static const uint8_t DeviceType = 2;
-#elif defined DEVICE_IR_WRITER
-	static const uint8_t DeviceType = 1;
-#else
-	#error "Device type not selected"
-#endif
+enum { cmdDeviceType = 0x0F, cmdOnScan = 0x01, cmdOffScan = 0x02,  cmdSendCode = 0x03, cmdDeleteCode = 0x04, cmdDeleteAll = 0x05, cmdReadCode = 0x07, cmdSaveCode = 0x08, cmdError = 0x0A};
 
-enum { RequestDeviceType = 0x0F };
+static uint8_t DeviceAddress = 0; 							/* Адрес устройства */
+static uint8_t DeviceType;									/* Тип устройства */
 
-static uint8_t _DevAddr = 0; 							/* Адрес устройства */
+static CircularBuffer NetworkBuffer;						/* Буфер данных устройства */
+enum {NetWorkBufferSize = 64 };
+//STORAGE_PAGE_SIZE + 1 + 1 + 2 + 2 + 2;			/* Размер буфера кода + заголовок команды (ADDR + CODE + PARAM + CRC16) */
+static uint8_t WorkBuffer[NetWorkBufferSize];				/* Рабочий буфер устройства */
 
-static CircularBuffer _NetWorkBuffer;						/* Буфер данных устройства */
-static const uint32_t NetWorkBufferSize = 0; //STORAGE_PAGE_SIZE + 1 + 1 + 2 + 2 + 2;			/* Размер буфера кода + заголовок команды (ADDR + CODE + PARAM + CRC16) */
-
-static NetworkState _State = Receive;		/* Текущее состояние */
-
-static int IsCrcValid(uint8_t addr, uint8_t cmd, uint16_t crc);
+static NetworkState NetState = Receive;		/* Текущее состояние */
 
 /* Установка состояния */
 static void SetMode(NetworkState state)
@@ -54,12 +47,12 @@ static void SetMode(NetworkState state)
 		USART_ITConfig(USART2, USART_IT_TC, ENABLE);
 	}
 
-	cbClear(&_NetWorkBuffer);
-	_State = state;
+	cbClear(&NetworkBuffer);
+	NetState = state;
 	USART_Cmd(USART2, ENABLE);
 }
 
-void InitNetWork(uint32_t baudrate, uint8_t address)
+void InitNetWork(uint32_t baudrate, uint8_t address, uint8_t deviceType)
 {
 	USART_InitTypeDef USART_InitStructure;
 	RCC_APB1PeriphClockCmd(RCC_APB1ENR_USART2EN, ENABLE);
@@ -88,8 +81,9 @@ void InitNetWork(uint32_t baudrate, uint8_t address)
 	USART_InitStructure.USART_WordLength = 8;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
 
-//	cbInit(&_NetWorkBuffer, NetWorkBufferSize);
-	_DevAddr = address;
+	cbInit(&NetworkBuffer, NetWorkBufferSize);
+	DeviceAddress = address;
+	DeviceType = deviceType;
 
 	USART_Init(USART2, &USART_InitStructure);
 
@@ -107,10 +101,10 @@ void USART2_IRQHandler(void)
 	if (USART_GetITStatus(USART2, USART_IT_RXNE))
 	{
 		USART_ClearITPendingBit(USART2, USART_IT_RXNE);
-		if (_State == Receive)
+		if (NetState == Receive)
 		{
 			uint8_t ch = USART_ReceiveData(USART2);
-			cbWrite(&_NetWorkBuffer, &ch);
+			cbWrite(&NetworkBuffer, &ch);
 			SetTimerValue(RX_TIMEOUT_TIMER, RX_TIMEOUT_VALUE);
 		}
 	}
@@ -118,12 +112,12 @@ void USART2_IRQHandler(void)
 	if (USART_GetITStatus(USART2, USART_IT_TC))
 	{
 		USART_ClearITPendingBit(USART2, USART_IT_TC);
-		if (_State == Transmit)
+		if (NetState == Transmit)
 		{
 			uint8_t ch;
-			if (!cbIsEmpty(&_NetWorkBuffer))
+			if (!cbIsEmpty(&NetworkBuffer))
 			{
-				cbRead(&_NetWorkBuffer, &ch);
+				cbRead(&NetworkBuffer, &ch);
 				USART_SendData(USART2, ch);
 			}
 			else
@@ -137,45 +131,66 @@ void USART2_IRQHandler(void)
 // Обработка сетевых данных
 void NetWorkProcess(void)
 {
-	if (_State == Receive)
+	if (NetState == Receive)
 	{
-		if ((!cbIsEmpty(&_NetWorkBuffer)) && IsTimeout(RX_TIMEOUT_TIMER))
+		if ((!cbIsEmpty(&NetworkBuffer)) && IsTimeout(RX_TIMEOUT_TIMER))
 		{
-			uint8_t addr, func;
+			uint8_t addr, func, ch;
+			uint16_t count = 0, crc;
 
-			cbRead(&_NetWorkBuffer, &addr);
-			if (addr != _DevAddr)
+			cbRead(&NetworkBuffer, &addr);
+			if (addr != DeviceAddress)
 			{
-				cbClear(&_NetWorkBuffer);
+				cbClear(&NetworkBuffer);
 				return;
 			}
 
-			cbRead(&_NetWorkBuffer, &func);
+			if (cbIsEmpty(&NetworkBuffer))
+				return;
+
+			cbRead(&NetworkBuffer, &func);
+
+			WorkBuffer[count++] = addr;
+			WorkBuffer[count++] = func;
+
+			while(!cbIsEmpty(&NetworkBuffer) && (count < NetWorkBufferSize))
+			{
+				cbRead(&NetworkBuffer, &ch);
+				WorkBuffer[count++] = ch;
+			}
+
+			crc = WorkBuffer[--count];
+			crc |= (WorkBuffer[--count] << 8) & 0xFF00;
+
+			if (crc != Crc16(WorkBuffer, count))
+				return;
+
 			switch (func)
 			{
-				case RequestDeviceType:
-				{
-					uint8_t ch;
-					uint16_t crc;
-					cbRead(&_NetWorkBuffer, &ch);
-					crc = ch;
-					cbRead(&_NetWorkBuffer, &ch);
-					crc |= ((ch << 8) & 0xFF00);
-
-					if (IsCrcValid(addr, func, crc))
-					{
-						uint8_t answer[] = {addr, RequestDeviceType, DeviceType, 0, 0};
-						crc = Crc16(answer, 3);
-						answer[3] = crc & 0xFF;
-						answer[4] = (crc >> 8) & 0xFF;
-						Send(answer, 5);
-					}
-					else
-					{
-						cbClear(&_NetWorkBuffer);
-					}
+				case cmdDeviceType:
+					RequestDeviceType();
 					break;
-				}
+
+				case cmdOnScan:
+					break;
+
+				case cmdOffScan:
+					break;
+
+				case cmdSaveCode:
+					break;
+
+				case cmdReadCode:
+					break;
+
+				case cmdSendCode:
+					break;
+
+				case cmdDeleteCode:
+					break;
+
+				case cmdDeleteAll:
+					break;
 
 				default:
 					break;
@@ -188,19 +203,14 @@ void NetWorkProcess(void)
 	}
 }
 
-static int IsCrcValid(uint8_t addr, uint8_t cmd, uint16_t crc)
-{
-	uint8_t buf[] = {addr, cmd, crc & 0xFF, (crc >> 8) & 0xFF};
-	uint16_t calc_crc = Crc16(buf, 2);
-	printf("In: %04X  Calc: %04X\n\r", crc, calc_crc);
-	return crc == calc_crc;
-}
+
 // Передача данных в сеть.
 // Если возвращаемое значение не ноль - произошла ошибка (интерфейс занят, недействиетльный буффер, слишком большой размер данных)
-uint8_t Send(const uint8_t *pBuf, uint32_t count)
+bool Send(const uint8_t *pBuf, uint32_t count)
 {
 	if (!pBuf)
-		return 2;
+		return false;
+
 	if (count >= NetWorkBufferSize)
 		count = NetWorkBufferSize;
 
@@ -209,16 +219,26 @@ uint8_t Send(const uint8_t *pBuf, uint32_t count)
 	for(uint32_t i=0; i < count; i++)
 	{
 		uint8_t ch = *(pBuf + i);
-		cbWrite(&_NetWorkBuffer, &ch);
+		cbWrite(&NetworkBuffer, &ch);
 	}
 
-	if ( !cbIsEmpty(&_NetWorkBuffer) )
+	if ( !cbIsEmpty(&NetworkBuffer) )
 	{
 		uint8_t ch;
-		cbRead(&_NetWorkBuffer, &ch);
+		cbRead(&NetworkBuffer, &ch);
 		USART_SendData(USART2, ch);
 	}
 
-	return 0;
+	return true;
+}
+
+/* Запрос типа устройства */
+void RequestDeviceType(void)
+{
+	uint8_t answer[] = {DeviceAddress, cmdDeviceType, DeviceType, 0, 0};
+	uint16_t crc = Crc16(answer, 3);
+	answer[3] = crc & 0xFF;
+	answer[4] = (crc >> 8) & 0xFF;
+	Send(answer, sizeof(answer)/sizeof(answer[0]));
 }
 
