@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<history>
+   <processor signature="arm-none-eabi-gcc noversion nomachine -mcpu=cortex-m3 -mthumb -Wall -ffunction-sections -O0 -std=gnu99 -g -c -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -D__ASSEMBLY__ -DSTM32F103RE -I. -Istm_lib -Istm_lib\inc -Icmsis_boot -Icmsis -I..\Common\IR -I..\Common\Microrl -I..\Common\Network -I..\Common\Tools">
+      <target file="Terminal.o" lastModified="137b1f27b3a">
+         <source file="..\..\Terminal.c" lastModified="1378a518a20"/>
+      </target>
+      <target file="stm32f10x_rcc.o" lastModified="137b1f27c06">
+         <source file="..\..\stm_lib\src\stm32f10x_rcc.c" lastModified="137a3f5e6a4"/>
+      </target>
+      <target file="core_cm3.o" lastModified="137b1f27995">
+         <source file="..\..\cmsis\core_cm3.c" lastModified="137a3f5e78e"/>
+      </target>
+      <target file="PlcTimers.o" lastModified="137b1f2786c">
+         <source file="..\..\..\Common\Tools\PlcTimers.c" lastModified="137a953bdff"/>
+      </target>
+      <target file="IRScanner.o" lastModified="137b1f27dda">
+         <source file="..\..\IRScanner.c" lastModified="13789c4a027"/>
+      </target>
+      <target file="printf.o" lastModified="137b1f27ba8">
+         <source file="..\..\stdio\printf.c" lastModified="137a3f952ce"/>
+      </target>
+      <target file="Crc.o" lastModified="137b1f27a21">
+         <source file="..\..\..\Common\Tools\Crc.c" lastModified="136b6eb4b50"/>
+      </target>
+      <target file="NetWork.o" lastModified="137b1f27d6d">
+         <source file="..\..\..\Common\Network\NetWork.c" lastModified="1378e76d1bf"/>
+      </target>
+      <target file="IR.o" lastModified="137b1f27e38">
+         <source file="..\..\..\Common\IR\IR.c" lastModified="1378a517d30"/>
+      </target>
+      <target file="RingBuffer.o" lastModified="137b1f27d0f">
+         <source file="..\..\..\Common\Tools\RingBuffer.c" lastModified="137800c09a9"/>
+      </target>
+      <target file="stm32f10x_gpio.o" lastModified="137b1f27a7f">
+         <source file="..\..\stm_lib\src\stm32f10x_gpio.c" lastModified="137a3f615b4"/>
+      </target>
+      <target file="stm32f10x_exti.o" lastModified="137b1f27c44">
+         <source file="..\..\stm_lib\src\stm32f10x_exti.c" lastModified="137a3f61b42"/>
+      </target>
+      <target file="system_stm32f10x.o" lastModified="137b1f279d3">
+         <source file="..\..\cmsis_boot\system_stm32f10x.c" lastModified="137b15e6fe0"/>
+      </target>
+      <target file="syscalls.o" lastModified="137b1f27cd1">
+         <source file="..\..\syscalls\syscalls.c" lastModified="137a3f7c857"/>
+      </target>
+      <target file="startup_stm32f10x_hd.o" lastModified="137b1f279f2">
+         <source file="..\..\cmsis_boot\startup\startup_stm32f10x_hd.c" lastModified="137a3f5e6e2"/>
+      </target>
+      <target file="stm32f10x_tim.o" lastModified="137b1f27956">
+         <source file="..\..\stm_lib\src\stm32f10x_tim.c" lastModified="137a3f639b8"/>
+      </target>
+      <target file="stm32f10x_usart.o" lastModified="137b1f27ca2">
+         <source file="..\..\stm_lib\src\stm32f10x_usart.c" lastModified="137a3f6490b"/>
+      </target>
+      <target file="main.o" lastModified="137b1f27aec">
+         <source file="..\..\main.c" lastModified="137b1f26198"/>
+      </target>
+      <target file="microrl.o" lastModified="137b1f2781e">
+         <source file="..\..\..\Common\Microrl\microrl.c" lastModified="13789c87cdc"/>
+      </target>
+   </processor>
+</history>

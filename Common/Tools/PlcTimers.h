@@ -13,6 +13,9 @@
 #define BLINK_TIMER 1			/* Индекс таймера мигания */
 #define BLINK_VALUE (0.25 / PLC_TIMER_PERIOD) /* 250 мс - интервал мигания  */
 
+#define SLOW_BLINK_TIMER 2			/* Индекс таймера медленного мигания */
+#define SLOW_BLINK_VALUE (0.5 / PLC_TIMER_PERIOD) /* 250 мс - интервал мигания  */
+
 /* Инициализация тамеров */
 void InitPlcTimers(void);
 

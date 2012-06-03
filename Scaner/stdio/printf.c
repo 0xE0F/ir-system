@@ -16,12 +16,12 @@
  * @param  pStr	Storage string.
  * @param  c    Character to write.
  */
-void PrintChar(const char c)
+void PrintChar(char c)
 {
 	/* Send a char like: 
 	   while(Transfer not completed);
 	   Transmit a char;
-	*/
+	*/	
 	while( USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET) ;
 	USART_SendData(USART1, c);
 }

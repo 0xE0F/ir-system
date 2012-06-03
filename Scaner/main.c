@@ -6,6 +6,7 @@
 #include <stm32f10x_usart.h>
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdbool.h>
 
 #include <string.h>
@@ -34,13 +35,31 @@ bool BlinkIrScanCompliteLed = false;
 static void InitLeds(void);
 static void InitTerminalUART(uint32_t baudrate);
 
-inline void IrReceiveLedOn(void) { GPIOC->BSRR |= GPIO_Pin_8;}
-inline void IrReceiveLedOff(void) { GPIOC->BRR |= GPIO_Pin_8;}
-inline void IrReceiveLedInv(void) { GPIOC->ODR ^= GPIO_Pin_8;}
+#define IR_WAIT_1_LED_PORT GPIOC
+#define IR_WAIT_2_LED_PORT GPIOD
+#define POWER_LED_PORT GPIOB
+#define NETWORK_LED_PORT GPIOB
 
-inline void IrScanCompliteLedOn(void) { GPIOC->BSRR |= GPIO_Pin_9;}
-inline void IrScanCompliteLedOff(void) { GPIOC->BRR |= GPIO_Pin_9;}
-inline void IrScanCompliteLedInv(void) { GPIOC->ODR ^= GPIO_Pin_9;}
+#define IR_WAIT_1_LED_PIN GPIO_Pin_12
+#define IR_WAIT_2_LED_PIN GPIO_Pin_2
+#define POWER_LED_PIN GPIO_Pin_4
+#define NETWORK_LED_PIN GPIO_Pin_3
+
+void IrWaitFirstCodeLedOn(void) {  IR_WAIT_1_LED_PORT->BRR |= IR_WAIT_1_LED_PIN;}
+void IrWaitFirstCodeLedOff(void) { IR_WAIT_1_LED_PORT->BSRR |= IR_WAIT_1_LED_PIN;}
+void IrWaitFirstCodeLedInv(void) { IR_WAIT_1_LED_PORT->ODR ^= IR_WAIT_1_LED_PIN;}
+
+void IrWaitSecondCodeLedOn(void) {  IR_WAIT_2_LED_PORT->BRR |= IR_WAIT_2_LED_PIN;}
+void IrWaitSecondCodeLedOff(void) { IR_WAIT_2_LED_PORT->BSRR |= IR_WAIT_2_LED_PIN;}
+void IrWaitSecondCodeLedInv(void) { IR_WAIT_2_LED_PORT->ODR ^= IR_WAIT_2_LED_PIN;}
+
+void PowerLedOn(void) { POWER_LED_PORT->BRR |= POWER_LED_PIN;}
+void PowerLedOff(void) { POWER_LED_PORT->BSRR |= POWER_LED_PIN;}
+void PowerLedInv(void) { POWER_LED_PORT->ODR ^= POWER_LED_PIN;}
+
+void NetworkLedOn(void) { NETWORK_LED_PORT->BRR |= NETWORK_LED_PIN;}
+void NetworkLedOff(void) { NETWORK_LED_PORT->BSRR |= NETWORK_LED_PIN;}
+void NetworkLedInv(void) { NETWORK_LED_PORT->ODR ^= NETWORK_LED_PIN;}
 
 void ProcessScan(void);
 
@@ -65,12 +84,38 @@ void InitTerminal(uint32_t baudrate)
 	microrl_set_sigint_callback (prl, sigint);
 }
 
+size_t GetJumpersValue(void)
+{
+	size_t value = 0, tmp = 0;
+	GPIO_InitTypeDef  GPIO_InitStructure;
+
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+
+	GPIO_StructInit(&GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+	tmp |= (~(GPIOB->IDR >> 12)) & 0xF;
+	value = (tmp << 3) & 0x08;
+	value |= (tmp << 1) & 0x04;
+	value |= (tmp >> 1) & 0x02;
+	value |= (tmp >> 3) & 0x01;
+
+	return value;
+}
+
 int main(void)
 {
 	InitTerminal(115200);
 	InitPlcTimers();
 	InitLeds();
 
+	IrWaitFirstCodeLedOff();
+	IrWaitSecondCodeLedOff();
+	PowerLedOff();
+	NetworkLedOff();
 
 	while (1)
 	{
@@ -129,12 +174,25 @@ static void InitLeds(void)
 	GPIO_InitTypeDef  GPIO_InitStructure;
 
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
+
+	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);
 
 	GPIO_StructInit(&GPIO_InitStructure);
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
+	GPIO_InitStructure.GPIO_Pin = IR_WAIT_1_LED_PIN;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
+	GPIO_Init(IR_WAIT_1_LED_PORT, &GPIO_InitStructure);
+
+	GPIO_InitStructure.GPIO_Pin = IR_WAIT_2_LED_PIN;
+	GPIO_Init(IR_WAIT_2_LED_PORT, &GPIO_InitStructure);
+
+	GPIO_InitStructure.GPIO_Pin = POWER_LED_PIN;
+	GPIO_Init(POWER_LED_PORT, &GPIO_InitStructure);
+
+	GPIO_InitStructure.GPIO_Pin = NETWORK_LED_PIN;
+	GPIO_Init(NETWORK_LED_PORT, &GPIO_InitStructure);
 }
 
 void USART1_IRQHandler(void)
@@ -151,8 +209,8 @@ void ProcessScan(void)
 		case Idle:
 			BlinkIrReceiveLed = false;
 			BlinkIrScanCompliteLed = false;
-			IrReceiveLedOff();
-			IrScanCompliteLedOff();
+			IrWaitFirstCodeLedOff();
+			IrWaitSecondCodeLedOff();
 			break;
 
 		case Start:
@@ -176,7 +234,7 @@ void ProcessScan(void)
 			{
 				State = ScanSecond;
 				BlinkIrReceiveLed = false;
-				IrReceiveLedOn();
+				IrWaitFirstCodeLedOn();
 				printf("done\n\r");
 			}
 			break;
@@ -195,7 +253,7 @@ void ProcessScan(void)
 			{
 				State = Check;
 				BlinkIrScanCompliteLed = false;
-				IrScanCompliteLedOn();
+				IrWaitSecondCodeLedOn();
 				printf("done\n\r");
 			}
 			break;
@@ -209,8 +267,8 @@ void ProcessScan(void)
 			State = SendCode;
 			if (!cmp)
 			{
-				IrReceiveLedOff();
-				IrScanCompliteLedOff();
+				IrWaitFirstCodeLedOff();
+				IrWaitSecondCodeLedOff();
 			}
 			break;
 		}
@@ -232,9 +290,12 @@ void ProcessScan(void)
 	if (IsTimeoutEx(BLINK_TIMER, BLINK_VALUE))
 	{
 		if (BlinkIrReceiveLed)
-			IrReceiveLedInv();
+			IrWaitFirstCodeLedInv();
 		if (BlinkIrScanCompliteLed)
-			IrScanCompliteLedInv();
+			IrWaitSecondCodeLedInv();
 	}
+
+	if (IsTimeoutEx(SLOW_BLINK_TIMER, SLOW_BLINK_VALUE))
+		PowerLedInv();
 
 }

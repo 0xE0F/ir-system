@@ -42,7 +42,7 @@
         <include name="**/*.c"/>
         <include name="**/*.s"/>
       </fileset>
-      <fileset dir="C:\CooCox\CoIDE\workspace\irsystem\Common\NetWork">
+      <fileset dir="C:\CooCox\CoIDE\workspace\irsystem\Common\Network">
         <include name="**/*.c"/>
         <include name="**/*.s"/>
       </fileset>
@@ -54,11 +54,10 @@
       
       <!-- defines -->
       <defineset>
-        <define name="STM32F10X_MD_VL"/>
+        <define name="STM32F10X_HD"/>
         <define name="USE_STDPERIPH_DRIVER"/>
         <define name="__ASSEMBLY__"/>
-        <define name="DEVICE_IR_READER"/>
-        <define name="STM32F100RB"/>
+        <define name="STM32F103RE"/>
       </defineset>
       
       <!-- include compile path -->
@@ -67,24 +66,22 @@
       <includepath path="stm_lib/inc"/>
       <includepath path="cmsis_boot"/>
       <includepath path="cmsis"/>
-      <includepath path="C:\CooCox\CoIDE\workspace\irsystem\Common\Tools"/>
       <includepath path="C:\CooCox\CoIDE\workspace\irsystem\Common\IR"/>
-      <includepath path="C:\CooCox\CoIDE\workspace\irsystem\Common\NetWork"/>
       <includepath path="C:\CooCox\CoIDE\workspace\irsystem\Common\Microrl"/>
+      <includepath path="C:\CooCox\CoIDE\workspace\irsystem\Common\Network"/>
+      <includepath path="C:\CooCox\CoIDE\workspace\irsystem\Common\Tools"/>
       
       <!-- arm-none-eabi-gcc compiler arguments -->
       <compilerarg value="-mcpu=cortex-m3"/>
       <compilerarg value="-mthumb"/>
       <compilerarg value="-Wall"/>      
       <compilerarg value="-ffunction-sections"/>
-      
-      <compilerarg value="-std=c99"/>
-      
-      <compilerarg value="-O2"/>
+      <compilerarg value="-O0"/>
+      <compilerarg value="-std=gnu99"/>
       <compilerarg value="-g"/>
       
       <!-- arm-none-eabi-gcc linker arguments -->
-      <linkerarg value="-O2"/>
+      <linkerarg value="-O0"/>
       <linkerarg value="-nostartfiles"/>
       <linkerarg value="-Map=${project.name}.map"/>
       <linkerarg value="-mcpu=cortex-m3"/>

@@ -23,8 +23,8 @@ void InitPlcTimers(void)
 
 	TIM_ITConfig(TIM6, TIM_IT_Update, ENABLE);
 
-	NVIC_EnableIRQ(TIM6_DAC_IRQn);
-	NVIC_SetPriority(TIM6_DAC_IRQn, 8);
+	NVIC_EnableIRQ(TIM6_IRQn);
+	NVIC_SetPriority(TIM6_IRQn, 8);
 
 	TIM_Cmd(TIM6, ENABLE);
 }
@@ -71,7 +71,7 @@ void SetTimerValue(const uint8_t timerId, const uint32_t value)
 	} while(__STREXW(value, _Timers +timerId));
 }
 
-void TIM6_DAC_IRQHandler()
+void TIM6_IRQHandler()
 {
 	if (TIM_GetITStatus(TIM6, TIM_IT_Update) != RESET)
 	{

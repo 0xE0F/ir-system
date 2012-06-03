@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <projectDescription>
-	<name>IRScaner</name>
+	<name>Scaner</name>
 	<comment/>
 	<projects>
 	</projects>
@@ -74,9 +74,9 @@
 			<locationURI>WORKSPACE_LOC/irsystem/Common/Microrl</locationURI>
 		</link>
 		<link>
-			<name>NetWork</name>
+			<name>Network</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/irsystem/Common/NetWork</locationURI>
+			<locationURI>WORKSPACE_LOC/irsystem/Common/Network</locationURI>
 		</link>
 		<link>
 			<name>Tools</name>
