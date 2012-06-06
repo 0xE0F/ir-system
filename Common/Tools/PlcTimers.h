@@ -8,13 +8,19 @@
 #define PLC_TIMER_PERIOD	0.0001	/* Разрешение программного таймера */
 
 #define RX_TIMEOUT_TIMER 0			/* Индекс таймера приема */
-#define RX_TIMEOUT_VALUE (0.005 / PLC_TIMER_PERIOD) /* 5 мс - таймаут приема данных */
+#define RX_TIMEOUT_VALUE (0.010 / PLC_TIMER_PERIOD) /* 5 мс - таймаут приема данных */
 
 #define BLINK_TIMER 1			/* Индекс таймера мигания */
 #define BLINK_VALUE (0.25 / PLC_TIMER_PERIOD) /* 250 мс - интервал мигания  */
 
 #define SLOW_BLINK_TIMER 2			/* Индекс таймера медленного мигания */
 #define SLOW_BLINK_VALUE (0.5 / PLC_TIMER_PERIOD) /* 250 мс - интервал мигания  */
+
+#define TRANSMIT_TIMER 3			/* Индекс таймера медленного мигания */
+#define TRANSMIT_VALUE (0.0002 / PLC_TIMER_PERIOD) /* 250 мс - интервал мигания  */
+
+#define SND_TIMER 4			/* Индекс таймера медленного мигания */
+#define SND_VALUE (1 / PLC_TIMER_PERIOD) /* 250 мс - интервал мигания  */
 
 /* Инициализация тамеров */
 void InitPlcTimers(void);

@@ -17,6 +17,7 @@
 #include <RingBuffer.h>
 
 #include <../NetWork/NetWork.h>
+#include <../Tools/Crc.h>
 #include <PlcTimers.h>
 
 static microrl_t rl;
@@ -26,7 +27,7 @@ static const unsigned TerminalBufferSize = 16;
 IRCode IrCodes[2];
 
 /* Рабочие состояния */
-enum States { Idle, Start, ScanFirst, WaitFirst, ScanSecond, WaitSecond, Check, SendCode, WaitSend};
+enum States { Idle, Start, ScanFirst, WaitFirst, ScanSecond, WaitSecond, Check, SendCode, SendError, WaitSend};
 static enum States State = Idle; /* Текущее состояние */
 
 bool BlinkIrReceiveLed = false;
@@ -71,6 +72,9 @@ void RunScan(void)
 	State = Start;
 }
 
+static uint16_t Id = 0;
+static size_t CodeToSendIndex = 0;
+
 /* Инициализация терминала */
 void InitTerminal(uint32_t baudrate)
 {
@@ -111,6 +115,7 @@ int main(void)
 	InitTerminal(115200);
 	InitPlcTimers();
 	InitLeds();
+	InitNetWork(9600, GetJumpersValue(), dtScaner);
 
 	IrWaitFirstCodeLedOff();
 	IrWaitSecondCodeLedOff();
@@ -127,6 +132,7 @@ int main(void)
 		}
 
 		ProcessScan();
+		ProcessNetwork();
 	}
 }
 
@@ -260,28 +266,58 @@ void ProcessScan(void)
 
 		case Check:
 		{
-			bool cmp = false;
+			bool res = false;
 			printf("\tCheck IR codes: ");
-			cmp = IsEqual(&(IrCodes[0]), &(IrCodes[1]));
-			printf("%s\n\r", cmp ? "Equal" : "Error");
-			State = SendCode;
-			if (!cmp)
+			res = IsEqual(&(IrCodes[0]), &(IrCodes[1]));
+			printf("%s\n\r", res ? "Equal" : "Error");
+
+			if (res)
+			{
+				CodeToSendIndex =  (IrCodes[0].Intervals < IrCodes[1].Intervals) ? 0 : 1;
+				State = SendCode;
+			}
+			else
 			{
 				IrWaitFirstCodeLedOff();
 				IrWaitSecondCodeLedOff();
+				State = SendError;
 			}
 			break;
 		}
 
 		case SendCode:
-			State = WaitSend;
+		{
+			if (GetNetworkState() == Transmit)
+				break;
+
 			printf("\tSending IR code...");
+			if (Send(&(IrCodes[CodeToSendIndex]), sizeof(IRCode)))
+				State = WaitSend;
+
+			break;
+		}
+
+		case SendError:
+		{
+			uint8_t answer[] = {GetDeviceAddress(), cmdError, GetDeviceType(), errNotEqual, 0, 0};
+			uint16_t crc = Crc16(answer, 4);
+			answer[4] = crc & 0xFF;
+			answer[5] = (crc >> 8) & 0xFF;
+			Send(answer, sizeof(answer)/sizeof(answer[0]));
+
+			State = WaitSend;
+			printf("\tSending error code...");
+		}
 			break;
 
 		case WaitSend:
-			State = Idle;
-			printf("OK\n\r");
+			if (GetNetworkState() == Receive)
+			{
+				State = Idle;
+				printf("OK\n\r");
+			}
 			break;
+
 
 		default:
 			break;
@@ -298,4 +334,37 @@ void ProcessScan(void)
 	if (IsTimeoutEx(SLOW_BLINK_TIMER, SLOW_BLINK_VALUE))
 		PowerLedInv();
 
+//	if (IsTimeoutEx(SND_TIMER, SND_VALUE))
+//	{
+//		const uint8_t buf[] = {0x01, 0x10, 0x02, 0x20};
+//		Send(buf, sizeof(buf) / sizeof(buf[0]));
+//	}
+
 }
+
+/* Запрос на сканирование кода */
+void RequestOnScan(uint16_t id, ScanMode mode)
+{
+	Id = id;
+
+	switch(mode)
+	{
+		case smInternal:
+			print("Scan code to internal memory not implementation\n\r");
+			break;
+
+		case smNetwork:
+			printf("Start scan code ID:%u\n\r", Id);
+			RunScan();
+			break;
+
+		case smInternalAndNetwork:
+			print("Scan code to internal memory and network not implementation\n\r");
+			break;
+
+		default:
+			print("Unknow save mode\n\r");
+			break;
+	}
+}
+

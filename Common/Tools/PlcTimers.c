@@ -4,7 +4,7 @@
 
 #include "PlcTimers.h"
 
-enum { TimersCount = 4};	/* Количество PLC таймеров */
+enum { TimersCount = 5};	/* Количество PLC таймеров */
 
 static uint32_t _Timers[TimersCount];
 

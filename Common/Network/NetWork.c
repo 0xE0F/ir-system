@@ -15,8 +15,6 @@
 
 #include <../NetWork/NetWork.h>
 
-enum { cmdDeviceType = 0x0F, cmdOnScan = 0x01, cmdOffScan = 0x02,  cmdSendCode = 0x03, cmdDeleteCode = 0x04, cmdDeleteAll = 0x05, cmdReadCode = 0x07, cmdSaveCode = 0x08, cmdError = 0x0A};
-
 static uint8_t DeviceAddress = 0; 							/* Адрес устройства */
 static uint8_t DeviceType;									/* Тип устройства */
 
@@ -26,6 +24,17 @@ enum {NetWorkBufferSize = 64 };
 static uint8_t WorkBuffer[NetWorkBufferSize];				/* Рабочий буфер устройства */
 
 static NetworkState NetState = Receive;		/* Текущее состояние */
+
+static bool TransmitComplite = false;
+
+/* Состоянее драйвер отправки */
+NetworkState GetNetworkState(void) { return NetState ;}
+
+/* Получение адреса устройства */
+uint8_t GetDeviceAddress(void) { return DeviceAddress; }
+
+/* Получение типа устройства */
+uint8_t GetDeviceType(void) { return DeviceType; }
 
 /* Установка состояния */
 static void SetMode(NetworkState state)
@@ -39,12 +48,15 @@ static void SetMode(NetworkState state)
 		RX_TX_RECEIVE_MODE;
 		USART_ITConfig(USART2, USART_IT_TC, DISABLE);
 		USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+		NetworkLedOff();
 	}
 	else
 	{
 		RX_TX_TRANSMIT_MODE;
 		USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
 		USART_ITConfig(USART2, USART_IT_TC, ENABLE);
+		NetworkLedOn();
+		TransmitComplite = false;
 	}
 
 	cbClear(&NetworkBuffer);
@@ -58,6 +70,7 @@ void InitNetWork(uint32_t baudrate, uint8_t address, uint8_t deviceType)
 	RCC_APB1PeriphClockCmd(RCC_APB1ENR_USART2EN, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 
 	GPIO_InitTypeDef  GPIO_InitStructure;
 
@@ -73,17 +86,24 @@ void InitNetWork(uint32_t baudrate, uint8_t address, uint8_t deviceType)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
+	GPIO_StructInit(&GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin = RX_CONTROL_PIN;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(RX_CONTROL_PORT, &GPIO_InitStructure);
+
+	GPIO_StructInit(&GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin = TX_CONTROL_PIN;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(TX_CONTROL_PORT, &GPIO_InitStructure);
 
 	USART_InitStructure.USART_BaudRate = baudrate;
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-	USART_InitStructure.USART_StopBits = USART_StopBits_2;
+	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_WordLength = 8;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
-
-	cbInit(&NetworkBuffer, NetWorkBufferSize);
-	DeviceAddress = address;
-	DeviceType = deviceType;
 
 	USART_Init(USART2, &USART_InitStructure);
 
@@ -92,6 +112,9 @@ void InitNetWork(uint32_t baudrate, uint8_t address, uint8_t deviceType)
 	NVIC_EnableIRQ(USART2_IRQn);
 	NVIC_SetPriority(USART2_IRQn, 8);
 
+	cbInit(&NetworkBuffer, NetWorkBufferSize);
+	DeviceAddress = address;
+	DeviceType = deviceType;
 
 	SetMode(Receive);
 }
@@ -122,14 +145,16 @@ void USART2_IRQHandler(void)
 			}
 			else
 			{
-				SetMode(Receive);
+				SetTimerValue(TRANSMIT_TIMER, TRANSMIT_VALUE);
+				TransmitComplite = true;
+//				SetMode(Receive);
 			}
 		}
 	}
 }
 
 // Обработка сетевых данных
-void NetWorkProcess(void)
+void ProcessNetwork(void)
 {
 	if (NetState == Receive)
 	{
@@ -159,8 +184,8 @@ void NetWorkProcess(void)
 				WorkBuffer[count++] = ch;
 			}
 
-			crc = WorkBuffer[--count];
-			crc |= (WorkBuffer[--count] << 8) & 0xFF00;
+			crc = (WorkBuffer[--count] << 8) & 0xFF00;
+			crc |= WorkBuffer[--count] & 0x00FF;
 
 			if (crc != Crc16(WorkBuffer, count))
 				return;
@@ -172,7 +197,14 @@ void NetWorkProcess(void)
 					break;
 
 				case cmdOnScan:
+				{
+					uint16_t id = WorkBuffer[2];
+					uint8_t mode = WorkBuffer[4];
+					id |= (WorkBuffer[3] << 8) & 0xFF00;
+					RequestOnScan(id, mode);
 					break;
+				}
+
 
 				case cmdOffScan:
 					break;
@@ -199,7 +231,10 @@ void NetWorkProcess(void)
 	}
 	else
 	{
-
+		if ((TransmitComplite) && (IsTimeout(TRANSMIT_TIMER)))
+		{
+			SetMode(Receive);
+		}
 	}
 }
 
