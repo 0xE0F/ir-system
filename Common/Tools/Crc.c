@@ -45,10 +45,9 @@ const unsigned short Crc16Table[256] = {
 		0x8201,0x42C0,0x4380,0x8341,0x4100,0x81C1,0x8081,0x4040
 };
 
-uint16_t Crc16(const uint8_t * pcBlock, uint16_t len)
-{
-    unsigned short crc = 0xFFFF;
 
+uint16_t Crc16(const uint8_t * pcBlock, uint16_t len, uint16_t crc)
+{
     while (len--)
         crc = (crc >> 8) ^ Crc16Table[(crc & 0xFF) ^ *pcBlock++];
 

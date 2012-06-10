@@ -19,7 +19,7 @@ static uint8_t DeviceAddress = 0; 							/* Адрес устройства */
 static uint8_t DeviceType;									/* Тип устройства */
 
 static CircularBuffer NetworkBuffer;						/* Буфер данных устройства */
-enum {NetWorkBufferSize = 64 };
+enum {NetWorkBufferSize = STORAGE_PAGE_SIZE + 64 };
 //STORAGE_PAGE_SIZE + 1 + 1 + 2 + 2 + 2;			/* Размер буфера кода + заголовок команды (ADDR + CODE + PARAM + CRC16) */
 static uint8_t WorkBuffer[NetWorkBufferSize];				/* Рабочий буфер устройства */
 
@@ -187,7 +187,7 @@ void ProcessNetwork(void)
 			crc = (WorkBuffer[--count] << 8) & 0xFF00;
 			crc |= WorkBuffer[--count] & 0x00FF;
 
-			if (crc != Crc16(WorkBuffer, count))
+			if (crc != Crc16(WorkBuffer, count, 0xFFFF))
 				return;
 
 			switch (func)
@@ -198,9 +198,9 @@ void ProcessNetwork(void)
 
 				case cmdOnScan:
 				{
-					uint16_t id = WorkBuffer[2];
+					uint16_t id = WorkBuffer[3];
 					uint8_t mode = WorkBuffer[4];
-					id |= (WorkBuffer[3] << 8) & 0xFF00;
+					id |= (WorkBuffer[2] << 8) & 0xFF00;
 					RequestOnScan(id, mode);
 					break;
 				}
@@ -238,23 +238,43 @@ void ProcessNetwork(void)
 	}
 }
 
-
-// Передача данных в сеть.
-// Если возвращаемое значение не ноль - произошла ошибка (интерфейс занят, недействиетльный буффер, слишком большой размер данных)
-bool Send(const uint8_t *pBuf, uint32_t count)
+/* Запрос типа устройства */
+void RequestDeviceType(void)
 {
-	if (!pBuf)
+	uint8_t answer[] = {DeviceAddress, cmdDeviceType, DeviceType};
+	Answer(answer, sizeof(answer)/sizeof(answer[0]), NULL, 0, true);
+}
+
+/* Ответ на запрос */
+/* Формируется путем сложения заголовка и тела сообщения
+ * calcCrc определяет нужли ли добавлять в конце CRC
+ * */
+bool Answer(uint8_t *header, const size_t headerSize, uint8_t *msg, const size_t msgSize, const bool calcCrc)
+{
+	size_t totalSize = headerSize + msgSize + (calcCrc ? sizeof(uint16_t) : 0);
+
+	if (!header)
 		return false;
 
-	if (count >= NetWorkBufferSize)
-		count = NetWorkBufferSize;
+	if (totalSize > NetWorkBufferSize)
+		return false;
 
 	SetMode(Transmit);
 
-	for(uint32_t i=0; i < count; i++)
+	for (size_t i = 0; i < headerSize; i++)
+		cbWrite(&NetworkBuffer, (header+i));
+
+	for (size_t i = 0; i < msgSize; i++)
+		cbWrite(&NetworkBuffer, (msg+i));
+
+	if (calcCrc)
 	{
-		uint8_t ch = *(pBuf + i);
-		cbWrite(&NetworkBuffer, &ch);
+		uint16_t crc = Crc16(header, headerSize, 0xFFFF);
+		crc = Crc16(msg, msgSize, crc);
+		uint8_t bCrc = crc & 0xFF;
+		cbWrite(&NetworkBuffer, &bCrc);
+		bCrc = (crc >> 8)& 0xFF;
+		cbWrite(&NetworkBuffer, &bCrc);
 	}
 
 	if ( !cbIsEmpty(&NetworkBuffer) )
@@ -264,16 +284,15 @@ bool Send(const uint8_t *pBuf, uint32_t count)
 		USART_SendData(USART2, ch);
 	}
 
+//	printf("[Send :%u]\n\r", totalSize);
 	return true;
 }
 
-/* Запрос типа устройства */
-void RequestDeviceType(void)
+/* Ответ кодом ошибки */
+bool AnswerError(Errors error)
 {
-	uint8_t answer[] = {DeviceAddress, cmdDeviceType, DeviceType, 0, 0};
-	uint16_t crc = Crc16(answer, 3);
-	answer[3] = crc & 0xFF;
-	answer[4] = (crc >> 8) & 0xFF;
-	Send(answer, sizeof(answer)/sizeof(answer[0]));
+	uint8_t errorHeader[] = {GetDeviceAddress(), cmdError, error};
+	return Answer(errorHeader, sizeof(errorHeader) / sizeof(errorHeader[0]), NULL, 0, true);
 }
+
 

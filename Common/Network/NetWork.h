@@ -19,16 +19,15 @@
 
 
 enum { dtScaner = 0x02, dtTransmitter = 0x01 }; /* Типы устройств */
-enum { errNotEqual = 1 };
+typedef enum { errNotEqual = 1, errBusy = 2, errFlash = 5 } Errors;
 enum { cmdDeviceType = 0x0F, cmdOnScan = 0x01, cmdOffScan = 0x02,  cmdSendCode = 0x03, cmdDeleteCode = 0x04, cmdDeleteAll = 0x05, cmdReadCode = 0x07, cmdSaveCode = 0x08, cmdError = 0x0A};
+
+/* Параметры хранилища - только передачи или передача и хранение */
+enum {scOnlyTransmit = 1, scSaveAndTransmit = 2};
 
 void InitNetWork(uint32_t baudrate, uint8_t address, uint8_t deviceType); /* Инициализация сети */
 
 void ProcessNetwork(void); /* Обработка сетевых данных */
-
-// Передача данных в сеть.
-// Если возвращаемое значение не ноль - произошла ошибка (интерфейс занят, недействиетльный буффер, слишком большой размер данных)
-bool Send(const uint8_t *pBuf, uint32_t count);
 
 // Состояние в сети
 typedef enum  { Receive, Transmit } NetworkState;
@@ -44,6 +43,15 @@ uint8_t GetDeviceType(void);
 
 // Режимы сканирования
 typedef enum  { smInternal, smNetwork, smInternalAndNetwork} ScanMode;
+
+/* Ответ на запрос */
+/* Формируется путем сложения заголовка и тела сообщения
+ * calcCrc определяет нужли ли добавлять в конце CRC
+ * */
+bool Answer(uint8_t *header, const size_t headerSize, uint8_t *msg, const size_t msgSize, const bool calcCrc);
+
+/* Ответ кодом ошибки */
+bool AnswerError(Errors error);
 
 void RequestDeviceType(void); /* Запрос типа устройства */
 void RequestOnScan(uint16_t id, ScanMode mode); /* Запрос на сканирование кода */

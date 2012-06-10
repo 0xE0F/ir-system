@@ -5,6 +5,6 @@
 #define __CRC__H__
 
 /* Подсчет CRC16 */
-uint16_t Crc16(const uint8_t * pcBlock, uint16_t len);
+uint16_t Crc16(const uint8_t * pcBlock, uint16_t len, uint16_t crc);
 
 #endif //

@@ -287,11 +287,17 @@ void ProcessScan(void)
 
 		case SendCode:
 		{
+			uint8_t answer[] = {GetDeviceAddress(), cmdOnScan, (Id >> 8) & 0xFF, Id & 0x00FF, scOnlyTransmit, 0, 0};
+			uint8_t *msg = (uint8_t *)&(IrCodes[CodeToSendIndex]);
 			if (GetNetworkState() == Transmit)
 				break;
 
+			answer[6] = sizeof(IRCode) & 0xFF;
+			answer[5] = (sizeof(IRCode) >> 8) & 0xFF;
+
 			printf("\tSending IR code...");
-			if (Send(&(IrCodes[CodeToSendIndex]), sizeof(IRCode)))
+
+			if (Answer(answer, sizeof(answer)/sizeof(answer[0]), msg, sizeof(IRCode), true));
 				State = WaitSend;
 
 			break;
@@ -299,16 +305,11 @@ void ProcessScan(void)
 
 		case SendError:
 		{
-			uint8_t answer[] = {GetDeviceAddress(), cmdError, GetDeviceType(), errNotEqual, 0, 0};
-			uint16_t crc = Crc16(answer, 4);
-			answer[4] = crc & 0xFF;
-			answer[5] = (crc >> 8) & 0xFF;
-			Send(answer, sizeof(answer)/sizeof(answer[0]));
-
-			State = WaitSend;
 			printf("\tSending error code...");
-		}
+			if (AnswerError(errNotEqual))
+				State = WaitSend;
 			break;
+		}
 
 		case WaitSend:
 			if (GetNetworkState() == Receive)
@@ -323,16 +324,16 @@ void ProcessScan(void)
 			break;
 	}
 
-	if (IsTimeoutEx(BLINK_TIMER, BLINK_VALUE))
-	{
-		if (BlinkIrReceiveLed)
-			IrWaitFirstCodeLedInv();
-		if (BlinkIrScanCompliteLed)
-			IrWaitSecondCodeLedInv();
-	}
-
-	if (IsTimeoutEx(SLOW_BLINK_TIMER, SLOW_BLINK_VALUE))
-		PowerLedInv();
+//	if (IsTimeoutEx(BLINK_TIMER, BLINK_VALUE))
+//	{
+//		if (BlinkIrReceiveLed)
+//			IrWaitFirstCodeLedInv();
+//		if (BlinkIrScanCompliteLed)
+//			IrWaitSecondCodeLedInv();
+//	}
+//
+//	if (IsTimeoutEx(SLOW_BLINK_TIMER, SLOW_BLINK_VALUE))
+//		PowerLedInv();
 
 //	if (IsTimeoutEx(SND_TIMER, SND_VALUE))
 //	{
