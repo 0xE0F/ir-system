@@ -324,16 +324,16 @@ void ProcessScan(void)
 			break;
 	}
 
-//	if (IsTimeoutEx(BLINK_TIMER, BLINK_VALUE))
-//	{
-//		if (BlinkIrReceiveLed)
-//			IrWaitFirstCodeLedInv();
-//		if (BlinkIrScanCompliteLed)
-//			IrWaitSecondCodeLedInv();
-//	}
-//
-//	if (IsTimeoutEx(SLOW_BLINK_TIMER, SLOW_BLINK_VALUE))
-//		PowerLedInv();
+	if (IsTimeoutEx(BLINK_TIMER, BLINK_VALUE))
+	{
+		if (BlinkIrReceiveLed)
+			IrWaitFirstCodeLedInv();
+		if (BlinkIrScanCompliteLed)
+			IrWaitSecondCodeLedInv();
+	}
+
+	if (IsTimeoutEx(SLOW_BLINK_TIMER, SLOW_BLINK_VALUE))
+		PowerLedInv();
 
 //	if (IsTimeoutEx(SND_TIMER, SND_VALUE))
 //	{
@@ -369,3 +369,9 @@ void RequestOnScan(uint16_t id, ScanMode mode)
 	}
 }
 
+/* Запрос на остановку сканирования */
+void RequestOffScan(void)
+{
+	StopScan();
+	State = Idle;
+}

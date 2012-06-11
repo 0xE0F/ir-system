@@ -4,8 +4,12 @@
 #ifndef __IR__SCANNER__H__
 #define __IR__SCANNER__H__
 
-// Сканирование кода
+/* Сканирование кода */
 void Scan(IRCode *irCode);
+
+
+/* Прекращение процесса сканирования */
+void StopScan(void);
 
 // Производится сканирование
 volatile uint32_t IsScanning();

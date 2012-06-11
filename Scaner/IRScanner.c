@@ -36,10 +36,6 @@ static __IO uint32_t CurrentFrequency = InvalidFrequencyValue;	/* Текущая опреде
 
 #define GET_IR_DATA_BIT ((GPIOC->IDR & GPIO_Pin_0) ? 0 : 1)
 
-// ----------------------
-// Остановка сканирования
-static void StopScan();
-
 volatile uint32_t IsScanning() { return _IsScanning != 0; }
 
 // -------------------------------
@@ -173,7 +169,7 @@ void Scan(IRCode *irCode)
 
 // ----------------
 // Остановка записи
-static void StopScan()
+void StopScan(void)
 {
 	NVIC_DisableIRQ(TIM3_IRQn);
 	NVIC_DisableIRQ(EXTI0_IRQn);

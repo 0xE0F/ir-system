@@ -207,6 +207,7 @@ void ProcessNetwork(void)
 
 
 				case cmdOffScan:
+					RequestOffScan();
 					break;
 
 				case cmdSaveCode:
@@ -284,7 +285,6 @@ bool Answer(uint8_t *header, const size_t headerSize, uint8_t *msg, const size_t
 		USART_SendData(USART2, ch);
 	}
 
-//	printf("[Send :%u]\n\r", totalSize);
 	return true;
 }
 
