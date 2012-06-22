@@ -1,7 +1,9 @@
 #include <stm32f10x.h>
-#include <IR/IR.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
+
+#include <IR/IR.h>
 
 #include <Storage/ffconf.h>
 #include <Storage/ff.h>

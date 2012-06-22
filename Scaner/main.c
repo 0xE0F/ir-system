@@ -30,8 +30,8 @@ IRCode IrCodes[2];
 enum States { Idle, Start, ScanFirst, WaitFirst, ScanSecond, WaitSecond, Check, SendCode, SendError, WaitSend};
 static enum States State = Idle; /* Текущее состояние */
 
-bool BlinkIrReceiveLed = false;
-bool BlinkIrScanCompliteLed = false;
+enum BlinkMode { NoBlink = 0, BlinkFirstScan = 1, BlinkSecondScan = 2, BlinkSame = 3, BlinkError = 4};
+static enum BlinkMode BlinkState = NoBlink;
 
 static void InitLeds(void);
 static void InitTerminalUART(uint32_t baudrate);
@@ -62,6 +62,8 @@ void NetworkLedOn(void) { NETWORK_LED_PORT->BRR |= NETWORK_LED_PIN;}
 void NetworkLedOff(void) { NETWORK_LED_PORT->BSRR |= NETWORK_LED_PIN;}
 void NetworkLedInv(void) { NETWORK_LED_PORT->ODR ^= NETWORK_LED_PIN;}
 
+static void ProcessLeds(void);
+
 void ProcessScan(void);
 
 /* Запуск проесса сканирования */
@@ -70,6 +72,8 @@ void RunScan(void)
 	if (State != Idle)
 		return;
 	State = Start;
+	BlinkState = NoBlink;
+
 }
 
 static uint16_t Id = 0;
@@ -112,14 +116,16 @@ size_t GetJumpersValue(void)
 
 int main(void)
 {
+	for (size_t i = 0; i < SystemCoreClock/100; i++);
+
 	InitTerminal(115200);
 	InitPlcTimers();
 	InitLeds();
 	InitNetWork(9600, GetJumpersValue(), dtScaner);
 
+	PowerLedOn();
 	IrWaitFirstCodeLedOff();
 	IrWaitSecondCodeLedOff();
-	PowerLedOff();
 	NetworkLedOff();
 
 	while (1)
@@ -133,6 +139,7 @@ int main(void)
 
 		ProcessScan();
 		ProcessNetwork();
+		ProcessLeds();
 	}
 }
 
@@ -179,6 +186,7 @@ static void InitLeds(void)
 {
 	GPIO_InitTypeDef  GPIO_InitStructure;
 
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
@@ -213,14 +221,11 @@ void ProcessScan(void)
 	switch(State)
 	{
 		case Idle:
-			BlinkIrReceiveLed = false;
-			BlinkIrScanCompliteLed = false;
-			IrWaitFirstCodeLedOff();
-			IrWaitSecondCodeLedOff();
 			break;
 
 		case Start:
 		{
+			BlinkState = BlinkFirstScan;
 			State = ScanFirst;
 			printf("Start scan IR code:\n\r");
 			break;
@@ -228,7 +233,6 @@ void ProcessScan(void)
 
 		case ScanFirst:
 		{
-			BlinkIrReceiveLed = true;
 			Scan(&(IrCodes[0]));
 			State = WaitFirst;
 			printf("\tWaiting first code...");
@@ -239,15 +243,13 @@ void ProcessScan(void)
 			if (!IsScanning())
 			{
 				State = ScanSecond;
-				BlinkIrReceiveLed = false;
-				IrWaitFirstCodeLedOn();
 				printf("done\n\r");
+				BlinkState = BlinkSecondScan;
 			}
 			break;
 
 		case ScanSecond:
 		{
-			BlinkIrScanCompliteLed = true;
 			Scan(&(IrCodes[1]));
 			State = WaitSecond;
 			printf("\tWaiting second code...");
@@ -258,8 +260,6 @@ void ProcessScan(void)
 			if (!IsScanning())
 			{
 				State = Check;
-				BlinkIrScanCompliteLed = false;
-				IrWaitSecondCodeLedOn();
 				printf("done\n\r");
 			}
 			break;
@@ -273,13 +273,13 @@ void ProcessScan(void)
 
 			if (res)
 			{
+				BlinkState = BlinkSame;
 				CodeToSendIndex =  (IrCodes[0].Intervals < IrCodes[1].Intervals) ? 0 : 1;
 				State = SendCode;
 			}
 			else
 			{
-				IrWaitFirstCodeLedOff();
-				IrWaitSecondCodeLedOff();
+				BlinkState = BlinkError;
 				State = SendError;
 			}
 			break;
@@ -316,6 +316,8 @@ void ProcessScan(void)
 			{
 				State = Idle;
 				printf("OK\n\r");
+				if (BlinkState == BlinkSame)
+					BlinkState = NoBlink;
 			}
 			break;
 
@@ -323,17 +325,6 @@ void ProcessScan(void)
 		default:
 			break;
 	}
-
-	if (IsTimeoutEx(BLINK_TIMER, BLINK_VALUE))
-	{
-		if (BlinkIrReceiveLed)
-			IrWaitFirstCodeLedInv();
-		if (BlinkIrScanCompliteLed)
-			IrWaitSecondCodeLedInv();
-	}
-
-	if (IsTimeoutEx(SLOW_BLINK_TIMER, SLOW_BLINK_VALUE))
-		PowerLedInv();
 
 //	if (IsTimeoutEx(SND_TIMER, SND_VALUE))
 //	{
@@ -374,4 +365,60 @@ void RequestOffScan(void)
 {
 	StopScan();
 	State = Idle;
+	BlinkState = NoBlink;
 }
+
+static void ProcessLeds(void)
+{
+	static uint8_t InvMode = 1;
+
+	if (!IsTimeoutEx(BLINK_TIMER, BLINK_VALUE))
+		return;
+
+	switch(BlinkState)
+	{
+		case NoBlink:
+			IrWaitFirstCodeLedOff();
+			IrWaitSecondCodeLedOff();
+			break;
+
+		case BlinkFirstScan:
+			IrWaitFirstCodeLedOn();
+			IrWaitSecondCodeLedOff();
+			break;
+
+		case BlinkSecondScan:
+			IrWaitFirstCodeLedOn();
+			IrWaitSecondCodeLedOn();
+			break;
+
+		case BlinkSame:
+			if (InvMode)
+			{
+				IrWaitFirstCodeLedOn();
+				IrWaitSecondCodeLedOn();
+			}
+			else
+			{
+				IrWaitFirstCodeLedOff();
+				IrWaitSecondCodeLedOff();
+			}
+			InvMode ^= 0x01;
+			break;
+
+		case BlinkError:
+			if (InvMode)
+			{
+				IrWaitFirstCodeLedOn();
+				IrWaitSecondCodeLedOff();
+			}
+			else
+			{
+				IrWaitFirstCodeLedOff();
+				IrWaitSecondCodeLedOn();
+			}
+			InvMode ^= 0x01;
+			break;
+	}
+}
+

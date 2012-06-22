@@ -17,20 +17,21 @@
 						<entry flags="" kind="includePath" name="C:\CooCox\CoIDE\gcc\lib\gcc\arm-none-eabi\4.5.2\include"/>
 						<entry flags="" kind="includePath" name="C:\CooCox\CoIDE\gcc\lib\gcc\arm-none-eabi\4.5.2\include-fixed"/>
 						<entry flags="" kind="includePath" name="."/>
-						<entry flags="" kind="includePath" name="C:\CooCox\CoIDE\workspace\irsystem\Common\IR"/>
-						<entry flags="" kind="includePath" name="C:\CooCox\CoIDE\workspace\irsystem\Common\Microrl"/>
-						<entry flags="" kind="includePath" name="C:\CooCox\CoIDE\workspace\irsystem\Common\NetWork"/>
-						<entry flags="" kind="includePath" name="C:\CooCox\CoIDE\workspace\irsystem\Common\Tools"/>
+						<entry flags="" kind="includePath" name="C:/CooCox/CoIDE/workspace/irsystem/Common"/>
+						<entry flags="" kind="includePath" name="C:/CooCox/CoIDE/workspace/irsystem/Common/IR"/>
+						<entry flags="" kind="includePath" name="C:/CooCox/CoIDE/workspace/irsystem/Common/Microrl"/>
+						<entry flags="" kind="includePath" name="C:/CooCox/CoIDE/workspace/irsystem/Common/Network"/>
+						<entry flags="" kind="includePath" name="C:/CooCox/CoIDE/workspace/irsystem/Common/Storage"/>
+						<entry flags="" kind="includePath" name="C:/CooCox/CoIDE/workspace/irsystem/Common/Tools"/>
 						<entry flags="" kind="includePath" name="cmsis"/>
 						<entry flags="" kind="includePath" name="cmsis_boot"/>
 						<entry flags="" kind="includePath" name="stm_lib"/>
 						<entry flags="" kind="includePath" name="stm_lib/inc"/>
 						<entry flags="" kind="macro" name="__GNUC__" value=""/>
-						<entry flags="" kind="macro" name="STM32F10X_MD_VL" value=""/>
+						<entry flags="" kind="macro" name="STM32F10X_HD" value=""/>
 						<entry flags="" kind="macro" name="USE_STDPERIPH_DRIVER" value=""/>
 						<entry flags="" kind="macro" name="__ASSEMBLY__" value=""/>
-						<entry flags="" kind="macro" name="DEVICE_IR_READER" value=""/>
-						<entry flags="" kind="macro" name="STM32F100RB" value=""/>
+						<entry flags="" kind="macro" name="STM32F103RE" value=""/>
 					</externalSetting>
 				</externalSettings>
 			</storageModule>
@@ -42,20 +43,29 @@
 				<pathentry include="C:/CooCox/CoIDE/gcc/lib/gcc/arm-none-eabi/4.5.2/include" kind="inc" path="" system="true"/>
 				<pathentry include="C:/CooCox/CoIDE/gcc/lib/gcc/arm-none-eabi/4.5.2/include-fixed" kind="inc" path="" system="true"/>
 				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Transmitter" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Common" kind="inc" path="" system="true"/>
 				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Common/IR" kind="inc" path="" system="true"/>
 				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Common/Microrl" kind="inc" path="" system="true"/>
 				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Common/Network" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Common/Storage" kind="inc" path="" system="true"/>
 				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Common/Tools" kind="inc" path="" system="true"/>
 				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Transmitter/cmsis" kind="inc" path="" system="true"/>
 				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Transmitter/cmsis_boot" kind="inc" path="" system="true"/>
 				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Transmitter/stm_lib" kind="inc" path="" system="true"/>
 				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Transmitter/stm_lib/inc" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/gcc/arm-none-eabi/include" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/gcc/lib/gcc/arm-none-eabi/4.5.2/include" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/gcc/lib/gcc/arm-none-eabi/4.5.2/include-fixed" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Transmitter" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Transmitter/cmsis" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Transmitter/cmsis_boot" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Transmitter/stm_lib" kind="inc" path="" system="true"/>
+				<pathentry include="C:/CooCox/CoIDE/workspace/irsystem/Transmitter/stm_lib/inc" kind="inc" path="" system="true"/>
 				<pathentry kind="mac" name="__GNUC__" path="" value=""/>
-				<pathentry kind="mac" name="STM32F10X_MD_VL" path="" value=""/>
+				<pathentry kind="mac" name="STM32F10X_HD" path="" value=""/>
 				<pathentry kind="mac" name="USE_STDPERIPH_DRIVER" path="" value=""/>
 				<pathentry kind="mac" name="__ASSEMBLY__" path="" value=""/>
-				<pathentry kind="mac" name="DEVICE_IR_READER" path="" value=""/>
-				<pathentry kind="mac" name="STM32F100RB" path="" value=""/>
+				<pathentry kind="mac" name="STM32F103RE" path="" value=""/>
 				<pathentry kind="out" path=""/>
 			</storageModule>
 		</cconfiguration>

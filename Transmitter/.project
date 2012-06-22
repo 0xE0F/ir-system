@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>IRScaner</name>
-	<comment/>
+	<name>Transmitter</name>
+	<comment></comment>
 	<projects>
 	</projects>
 	<buildSpec>
@@ -11,7 +11,7 @@
 			<arguments>
 				<dictionary>
 					<key>?name?</key>
-					<value/>
+					<value></value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.append_environment</key>
@@ -19,7 +19,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildArguments</key>
-					<value/>
+					<value></value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildCommand</key>
@@ -64,24 +64,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>IR</name>
+			<name>Common</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/irsystem/Common/IR</locationURI>
-		</link>
-		<link>
-			<name>Microrl</name>
-			<type>2</type>
-			<locationURI>WORKSPACE_LOC/irsystem/Common/Microrl</locationURI>
-		</link>
-		<link>
-			<name>NetWork</name>
-			<type>2</type>
-			<locationURI>WORKSPACE_LOC/irsystem/Common/NetWork</locationURI>
-		</link>
-		<link>
-			<name>Tools</name>
-			<type>2</type>
-			<locationURI>WORKSPACE_LOC/irsystem/Common/Tools</locationURI>
+			<locationURI>WORKSPACE_LOC/irsystem/Common</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

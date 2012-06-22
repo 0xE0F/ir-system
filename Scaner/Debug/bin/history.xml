@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<history>
+   <processor signature="4.5.2 -O0 -nostartfiles -Map=Scaner.map -mcpu=cortex-m3 -mthumb -LC:\CooCox\CoIDE\workspace\irsystem\Scaner --gc-sections -TC:\CooCox\CoIDE\workspace\irsystem\Scaner\link.ld -g">
+      <target file="Scaner.elf" lastModified="138143f68f8">
+         <source file="..\obj\microrl.o" lastModified="138143f6261"/>
+         <source file="..\obj\PlcTimers.o" lastModified="138143f629f"/>
+         <source file="..\obj\stm32f10x_tim.o" lastModified="138143f635b"/>
+         <source file="..\obj\core_cm3.o" lastModified="138143f63a9"/>
+         <source file="..\obj\system_stm32f10x.o" lastModified="138143f63e7"/>
+         <source file="..\obj\startup_stm32f10x_hd.o" lastModified="138143f6406"/>
+         <source file="..\obj\Crc.o" lastModified="138143f6435"/>
+         <source file="..\obj\stm32f10x_gpio.o" lastModified="138143f6483"/>
+         <source file="..\obj\main.o" lastModified="138143f64f1"/>
+         <source file="..\obj\Terminal.o" lastModified="138143f654f"/>
+         <source file="..\obj\printf.o" lastModified="138143f65bc"/>
+         <source file="..\obj\stm32f10x_rcc.o" lastModified="138143f661a"/>
+         <source file="..\obj\stm32f10x_exti.o" lastModified="138143f6658"/>
+         <source file="..\obj\stm32f10x_usart.o" lastModified="138143f66b6"/>
+         <source file="..\obj\syscalls.o" lastModified="138143f66f4"/>
+         <source file="..\obj\RingBuffer.o" lastModified="138143f6733"/>
+         <source file="..\obj\NetWork.o" lastModified="138143f6791"/>
+         <source file="..\obj\IRScanner.o" lastModified="138143f67fe"/>
+         <source file="..\obj\IR.o" lastModified="138143f684c"/>
+      </target>
+   </processor>
+</history>

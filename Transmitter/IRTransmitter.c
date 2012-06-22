@@ -4,10 +4,11 @@
 #include <stm32f10x_tim.h>
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "IR.h"
+#include "../Common/IR/IR.h"
 #include "IRTransmitter.h"
 
 #define CHANNEL_0_PIN_NUMBER (GPIO_Pin_6)
