@@ -21,31 +21,31 @@
 // Максимальный номер канала
 const uint32_t MaxChannelNumber = 3;
 
-static IRCode *_TransmittingCode = NULL;
+static IRCode *TransmittingCode = NULL;
 
 // Флаги инициализации устройств
-static uint32_t _InitFlags = 0;
+static uint32_t InitFlags = 0;
 
 // Флаг инициализации несущего генератора
-static const uint32_t _CarrierTimerInit = 0x1;
+static const uint32_t CarrierTimerInit = 0x1;
 
 // Флаг инициализации выходных каналов
-static const uint32_t _OutputChannelInit = 0x2;
+static const uint32_t OutputChannelInit = 0x2;
 
 // Флаг инициализации несущего генератора
-static const uint32_t _WorkTimersInit = 0x4;
+static const uint32_t WorkTimersInit = 0x4;
 
 // Флаг процесса отправки кода
-static __IO uint32_t _IsTransmitting = 0;
+static volatile bool Transmitting = 0;
 
 // Текущий отправляемый интервал
-static __IO uint32_t _TransmittingIndex = 0;
+static __IO uint32_t TransmittingIndex = 0;
 
 // остаток интервала
-static __IO uint32_t _TransmittingTime = 0;
+static __IO uint32_t TransmittingTime = 0;
 
 // Текущий отправляемый канал
-static uint8_t _TransmittingChannel = ~0;
+static uint8_t TransmittingChannel = ~0;
 
 // Максимальное значение таймаута для отправляемого кода
 static const uint32_t OutTimeoutMax = 0x0000FFFF;
@@ -73,7 +73,7 @@ static void SetNextPartOutInterval(void);
 static void InitOuputChannel(void);
 
 // Проверка текущего состояния передатчика
-volatile uint32_t IsTransmitting() { return _IsTransmitting != 0; }
+volatile bool IsTransmitting() { return Transmitting; }
 
 static void InitCarrierTimer(void)
 {
@@ -109,7 +109,9 @@ static void InitCarrierTimer(void)
 	TIM_ARRPreloadConfig(TIM4, ENABLE);
 	TIM_Cmd(TIM4, ENABLE);
 
-	_InitFlags |= _CarrierTimerInit;
+	InitFlags |= CarrierTimerInit;
+
+	InitOuputChannel();
 }
 
 static void InitTimers(void)
@@ -132,7 +134,7 @@ static void InitTimers(void)
 
 	NVIC_SetPriority(TIM7_IRQn, 2);
 
-	_InitFlags |= _WorkTimersInit;
+	InitFlags |= WorkTimersInit;
 }
 
 // Установка несущей частоты
@@ -140,7 +142,7 @@ void SetCarrierFrequency(const uint32_t value)
 {
 	uint16_t period = 0;
 
-	if ((_InitFlags & _CarrierTimerInit) != _CarrierTimerInit)
+	if ((InitFlags & CarrierTimerInit) != CarrierTimerInit)
 		InitCarrierTimer();
 
 	TIM_Cmd(TIM4, DISABLE);
@@ -162,25 +164,25 @@ void TIM7_IRQHandler(void)
 {
 	TIM_ClearITPendingBit(TIM7, TIM_IT_Update);
 
-	if (!_TransmittingCode)
+	if (!TransmittingCode)
 		return;
 
-	if (_TransmittingTime)
+	if (TransmittingTime)
 	{
 		SetNextPartOutInterval();
 	}
 	else
 	{
-		if (++_TransmittingIndex < _TransmittingCode->IntervalsCount)
+		if (++TransmittingIndex < TransmittingCode->IntervalsCount)
 		{
-			SetOutInterval(_TransmittingCode->Intervals[_TransmittingIndex]);
+			SetOutInterval(TransmittingCode->Intervals[TransmittingIndex]);
 		}
 		else
 		{
 			TIM_Cmd(TIM7, DISABLE);
 			NVIC_DisableIRQ(TIM7_IRQn);
-			_IsTransmitting = 0;
-			SetOutValueToChannel(_TransmittingChannel, 0);
+			Transmitting = 0;
+			SetOutValueToChannel(TransmittingChannel, 0);
 		}
 	}
 }
@@ -196,35 +198,35 @@ static void InitOuputChannel(void)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(CHANNELS_PORT, &GPIO_InitStructure);
 
-	_InitFlags |= _OutputChannelInit;
+	InitFlags |= OutputChannelInit;
 }
 
 // Выдача кода в соответствующий канал
 StatusCode SendCodeToChannel(IRCode *code, uint32_t channelID)
 {
-	if ((_InitFlags & _OutputChannelInit) != _OutputChannelInit)
+	if ((InitFlags & OutputChannelInit) != OutputChannelInit)
 		InitOuputChannel();
 
-	if ((_InitFlags & _WorkTimersInit) != _WorkTimersInit)
+	if ((InitFlags & WorkTimersInit) != WorkTimersInit)
 		InitTimers();
 
-	if (_IsTransmitting)
+	if (Transmitting)
 		return StatusCode_Busy;
 	if (!code)
 		return StatusCode_NullArgumentReference;
 	if (channelID > MaxChannelNumber)
 		return StatusCode_ArgumentOutOfRange;
 
-	_TransmittingCode = code;
-	_TransmittingChannel = channelID;
+	TransmittingCode = code;
+	TransmittingChannel = channelID;
 
-	_TransmittingIndex = GetFirstNonEmptyIndex(_TransmittingCode);
-	if (_TransmittingIndex >= _TransmittingCode->IntervalsCount)
+	TransmittingIndex = GetFirstNonEmptyIndex(TransmittingCode);
+	if (TransmittingIndex >= TransmittingCode->IntervalsCount)
 		return StatusCode_InternalError;
 
-	SetCarrierFrequency(GetFrequencyInterval(_TransmittingCode->Frequency));
-	SetOutInterval(_TransmittingCode->Intervals[_TransmittingIndex]);
-	_IsTransmitting = 1;
+	SetCarrierFrequency(GetFrequencyInterval(TransmittingCode->Frequency));
+	SetOutInterval(TransmittingCode->Intervals[TransmittingIndex]);
+	Transmitting = 1;
 
 	TIM_Cmd(TIM7, ENABLE);
 	NVIC_EnableIRQ(TIM7_IRQn);
@@ -249,22 +251,22 @@ uint32_t GetFirstNonEmptyIndex(const IRCode *code)
 
 static void SetOutInterval(const uint32_t interval)
 {
-	_TransmittingTime = GetTime(interval);
-	SetOutValueToChannel(_TransmittingChannel, GetValue(interval));
+	TransmittingTime = GetTime(interval);
+	SetOutValueToChannel(TransmittingChannel, GetValue(interval));
 	SetNextPartOutInterval();
 }
 
 static void SetNextPartOutInterval(void)
 {
-	if (_TransmittingTime > OutTimeoutMax)
+	if (TransmittingTime > OutTimeoutMax)
 	{
 		TIM7->CNT = 0;
-		_TransmittingTime -= OutTimeoutMax;
+		TransmittingTime -= OutTimeoutMax;
 	}
 	else
 	{
-		TIM7->CNT = OutTimeoutMax -_TransmittingTime;
-		_TransmittingTime = 0;
+		TIM7->CNT = OutTimeoutMax -TransmittingTime;
+		TransmittingTime = 0;
 	}
 }
 

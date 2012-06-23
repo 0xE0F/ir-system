@@ -8,7 +8,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <../IR/IR.h>
-#include <Terminal.h>
+#include "Terminal.h"
+#include "IRTransmitter.h"
 
 extern void PrintChar(const char c);
 extern void RunScan(void);
@@ -22,12 +23,15 @@ static const char* Version = "1.0";
 #define _CMD_PRINT  "print"
 #define _CMD_IR_DEBUG	"ir_debug"
 #define _CMD_SHOW_PARAM	"params"
+#define _CMD_SET_CARRIER_FREQ "freq"
+#define _CMD_SET_CHANNEL_VALUE "channel"
 
 
-#define _NUM_OF_CMD 5
+
+#define _NUM_OF_CMD 7
 
 //available  commands
-char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_PRINT, _CMD_IR_DEBUG, _CMD_SHOW_PARAM};
+char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_PRINT, _CMD_IR_DEBUG, _CMD_SHOW_PARAM, _CMD_SET_CARRIER_FREQ, _CMD_SET_CHANNEL_VALUE};
 // array for comletion
 char * compl_world [_NUM_OF_CMD + 1];
 
@@ -48,14 +52,15 @@ char get_char (void)
 }
 
 //*****************************************************************************
-void print_help (void)
-{
+void print_help (void) {
 	print ("Use TAB key for completion\n\rCommand:\n\r");
 	print ("\thelp - this help\n\r");
 	print ("\tclear - clear display\n\r");
 	print ("\tparams	- show parameters\n\r");
 	print ("\tprint	[0,1] - print debug output [code]\n\r");
 	print ("\tir_debug [0,1] - on or off debug ir codes\n\r");
+	print ("\freq <f> - set carrier frequency\n\r");
+	print ("\tchannel [0..3] [0,1] - set channel value\n\r");
 }
 
 
@@ -95,8 +100,44 @@ int execute (int argc, const char * const * argv)
 //				return -1;
 //			}
 //			return 0;
-		}
-		else if (strcmp (argv[i], _CMD_IR_DEBUG) == 0) {
+		} else if ( strcmp(argv[i], _CMD_SET_CARRIER_FREQ) == 0 ){
+
+			if ( ++i < argc) {
+				size_t freq = atoi(argv[i]);
+				SetCarrierFrequency(freq);
+			} else {
+				print("Not enough arguments\n\r");
+				return -1;
+			}
+
+			return 0;
+		} else if ( strcmp(argv[i], _CMD_SET_CHANNEL_VALUE) == 0 ) {
+
+			if (++i < argc) {
+				unsigned char channel = atoi(argv[i]);
+
+				if (channel > MaxChannelNumber) {
+					print("Channel number out of range\n\r");
+					return -1;
+				}
+
+				if (++i < argc) {
+					unsigned char value = atoi(argv[i]);
+
+					if (value > 1) {
+						printf("Channel value out of range\n\r");
+						return -1;
+					}
+
+					SetOutValueToChannel(channel, value);
+					return 0;
+				}
+			}
+
+			print("Not enough arguments\n\r");
+			return -1;
+
+		} else if (strcmp (argv[i], _CMD_IR_DEBUG) == 0) {
 			if (++i < argc) {
 				int res = atoi(argv[i]);
 				DebugModeIr = (res > 0);
