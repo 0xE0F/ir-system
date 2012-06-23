@@ -14,10 +14,10 @@
 
 #include "RingBuffer.h"
 
-//#include <Storage/ffconf.h>
-//#include <Storage/ff.h>
-//#include <Storage/diskio.h>
-//#include <Storage/Storage.h>
+#include <Storage/ffconf.h>
+#include <Storage/ff.h>
+#include <Storage/diskio.h>
+#include <Storage/Storage.h>
 #include <../NetWork/NetWork.h>
 #include "PlcTimers.h"
 
@@ -25,8 +25,6 @@ microrl_t rl;
 microrl_t * prl = &rl;
 static CircularBuffer terminalBuffer; /* Буфер терминала */
 static const unsigned TerminalBufferSize = 16;
-
-IRCode DebugCode;	// Отладочный код
 
 static void InitLeds(void);
 static void InitTerminalUART(uint32_t baudrate);
@@ -69,8 +67,7 @@ static void InitTerminal(uint32_t baudrate) {
 	microrl_set_sigint_callback (prl, sigint);
 }
 
-size_t GetJumpersValue(void)
-{
+size_t GetJumpersValue(void) {
 	size_t value = 0, tmp = 0;
 	GPIO_InitTypeDef  GPIO_InitStructure;
 
@@ -94,35 +91,31 @@ size_t GetJumpersValue(void)
 int main(void) {
  	for (size_t i = 0; i < SystemCoreClock/100; i++);
 
-	/* Setup SysTick Timer for 1 millisecond interrupts, also enables Systick and Systick-Interrupt */
-//	if (SysTick_Config(SystemCoreClock / 1000))
-//	{
-//		while (1);
-//	}
-	InitLeds();
-	InitPlcTimers();
+ 	InitLeds();
+	PowerLedOn();
 	InitTerminal(115200);
+
+	/* Setup SysTick Timer for 1 millisecond interrupts, also enables Systick and Systick-Interrupt */
+	if (SysTick_Config(SystemCoreClock / 1000)) {
+		ErrorLedOn();
+		printf("Error init system timer\n\r");
+		while (true);
+	}
+
+	InitPlcTimers();
 //	InitNetWork(9600, 0x1);
 
-//	print("Initialization storage...");
-//	tmp = InitStorage();
-//	if (!tmp)
-//	{
-//		print("Ok\n\r");
-//		PrintStorageStatus();
-//	}
-//	else
-//	{
-//		printf("Fail. Status: %d\n\r", (unsigned int)tmp);
-//		_CurrentState = CROPPED;
-//	}
+ 	SetStorageDebugMode(true);
+	if ( !InitStorage() ) {
+		while(true) {
+			if (IsTimeoutEx(BLINK_TIMER, BLINK_VALUE)) {
+				ErrorLedInv();
+			}
+		}
+	}
+ 	SetStorageDebugMode(false);
 
-	ErrorLedOff();
-	TransmittLedOff();
-	NetworkLedOff();
-	PowerLedOn();
-
-	while (1) {
+	while (true) {
 		if ( !cbIsEmpty(&terminalBuffer) ) {
 			uint8_t c;
 			cbRead(&terminalBuffer, &c);
@@ -198,6 +191,11 @@ static void InitLeds(void) {
 
 	GPIO_InitStructure.GPIO_Pin = NETWORK_LED_PIN;
 	GPIO_Init(NETWORK_LED_PORT, &GPIO_InitStructure);
+
+	ErrorLedOff();
+	TransmittLedOff();
+	NetworkLedOff();
+	PowerLedOff();
 }
 
 void USART1_IRQHandler(void) {
@@ -206,25 +204,12 @@ void USART1_IRQHandler(void) {
 	USART_ClearITPendingBit(USART1, USART_IT_RXNE);
 }
 
-//RAMFUNC void SysTick_Handler(void)
-//{
-//	static uint16_t cnt=0;
-//	static uint8_t flip=0, cntdiskio=0;
-//
-//	cnt++;
-//	if( cnt >= 500 ) {
-//		cnt = 0;
-//		/* alive sign */
-//		if ( flip ) {
-//			GPIOC->BSRR |= GPIO_Pin_9;
-//		} else {
-//			GPIOC->BRR |= GPIO_Pin_9;		}
-//		flip = !flip;
-//	}
-//
-//	cntdiskio++;
-//	if ( cntdiskio >= 10 ) {
-//		cntdiskio = 0;
-//		disk_timerproc(); /* to be called every 10ms */
-//	}
-//}
+RAMFUNC void SysTick_Handler(void) {
+	static uint8_t cntdiskio=0;
+
+	cntdiskio++;
+	if ( cntdiskio >= 10 ) {
+		cntdiskio = 0;
+		disk_timerproc(); /* to be called every 10ms */
+	}
+}

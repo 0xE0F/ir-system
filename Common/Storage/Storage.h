@@ -1,20 +1,14 @@
 #ifndef __STORAGE__H__
 #define __STORAGE__H__
 
-/* ============================================= */
-// Public API
-/* ============================================= */
+/* Инициализация хранилища */
+bool InitStorage(void);
 
-typedef enum {StorageNoError, StorageNoDevice, StorageWriteProtect, StorageNoFreeSpace, StorageNotFound, StorageInternalError} StorageStatus;
+/* Сохранение кода в хранилище */
+bool Save(IRCode *code);
 
-// Инициализация хранилища
-StorageStatus InitStorage(void);
-
-// Сохранение кода в хранилище
-StorageStatus Save(IRCode *code);
-
-// Чтение из хранилища
-StorageStatus Open(const uint32_t id, IRCode *result);
+/* Чтение из хранилища */
+bool Open(const uint32_t id, IRCode *result);
 
 /* ============================================= */
 // Debug fucntions
@@ -25,5 +19,9 @@ void PrintStorageStatus(void);
 
 // Отображение содержимого хранилища
 void PrintConentStorage(void);
+
+/* Вклчюение отладочного режима хранилища */
+void SetStorageDebugMode(bool mode);
+
 
 #endif //__STORAGE__H__

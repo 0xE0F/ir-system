@@ -10,6 +10,7 @@
 #include <../IR/IR.h>
 #include "Terminal.h"
 #include "IRTransmitter.h"
+#include "Storage.h"
 
 extern void PrintChar(const char c);
 extern void RunScan(void);
@@ -20,18 +21,20 @@ static const char* Version = "1.0";
 
 #define _CMD_HELP	"help"
 #define _CMD_CLEAR	"clear"
-#define _CMD_PRINT  "print"
-#define _CMD_IR_DEBUG	"ir_debug"
+#define _CMD_STATUS  "status"
+#define _CMD_STORAGE  "storage"
+#define _CMD_STORAGE_DEBUG	"storage_debug"
 #define _CMD_SHOW_PARAM	"params"
 #define _CMD_SET_CARRIER_FREQ "freq"
 #define _CMD_SET_CHANNEL_VALUE "channel"
+#define _CMD_SET_SD_POWER "sd_power"
 
 
 
-#define _NUM_OF_CMD 7
+#define _NUM_OF_CMD 9
 
 //available  commands
-char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_PRINT, _CMD_IR_DEBUG, _CMD_SHOW_PARAM, _CMD_SET_CARRIER_FREQ, _CMD_SET_CHANNEL_VALUE};
+char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_STATUS, _CMD_STORAGE, _CMD_STORAGE_DEBUG, _CMD_SHOW_PARAM, _CMD_SET_CARRIER_FREQ, _CMD_SET_CHANNEL_VALUE, _CMD_SET_SD_POWER};
 // array for comletion
 char * compl_world [_NUM_OF_CMD + 1];
 
@@ -57,9 +60,10 @@ void print_help (void) {
 	print ("\thelp - this help\n\r");
 	print ("\tclear - clear display\n\r");
 	print ("\tparams	- show parameters\n\r");
-	print ("\tprint	[0,1] - print debug output [code]\n\r");
-	print ("\tir_debug [0,1] - on or off debug ir codes\n\r");
-	print ("\freq <f> - set carrier frequency\n\r");
+	print ("\tstatus	- show status storage\n\r");
+	print ("\tstorage	- show storage content\n\r");
+	print ("\tstorage_debug [0,1] - on or off debug storage operations\n\r");
+	print ("\tfreq <f> - set carrier frequency\n\r");
 	print ("\tchannel [0..3] [0,1] - set channel value\n\r");
 }
 
@@ -82,24 +86,12 @@ int execute (int argc, const char * const * argv)
 		} else if (strcmp (argv[i], _CMD_CLEAR) == 0) {
 			print ("\033[2J");    // ESC seq for clear entire screen
 			print ("\033[H");     // ESC seq for move cursor at left-top corner
-		} else if (strcmp (argv[i], _CMD_PRINT) == 0) {
-//			if (++i < argc)
-//			{
-//				unsigned int num = atoi(argv[i]);
-//				if (num > 1)
-//				{
-//					printf("Error: argument must be 0 or 1\n\r");
-//					return -1;
-//				}
-//				DebugPrint(&(IrCodes[num]));
-//				return 0;
-//			}
-//			else
-//			{
-//				print("Not enough arguments\n\r");
-//				return -1;
-//			}
-//			return 0;
+		} else if (strcmp (argv[i], _CMD_STATUS) == 0) {
+			PrintStorageStatus();
+			return 0;
+		} else if (strcmp (argv[i], _CMD_STORAGE) == 0) {
+			PrintConentStorage();
+			return 0;
 		} else if ( strcmp(argv[i], _CMD_SET_CARRIER_FREQ) == 0 ){
 
 			if ( ++i < argc) {
@@ -137,10 +129,19 @@ int execute (int argc, const char * const * argv)
 			print("Not enough arguments\n\r");
 			return -1;
 
-		} else if (strcmp (argv[i], _CMD_IR_DEBUG) == 0) {
+		} else if (strcmp (argv[i], _CMD_STORAGE_DEBUG) == 0) {
 			if (++i < argc) {
 				int res = atoi(argv[i]);
-				DebugModeIr = (res > 0);
+				SetStorageDebugMode(res);
+			} else {
+				print("Not enough arguments\n\r");
+				return -1;
+			}
+			return 0;
+		} else if ( strcmp(argv[i], _CMD_SET_SD_POWER) == 0 ) {
+			if (++i < argc) {
+				int res = atoi(argv[i]);
+				SetSDPowerMode(res);
 			} else {
 				print("Not enough arguments\n\r");
 				return -1;

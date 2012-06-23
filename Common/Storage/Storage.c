@@ -1,4 +1,7 @@
 #include <stm32f10x.h>
+#include <stm32f10x_rcc.h>
+#include <stm32f10x_gpio.h>
+
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -11,6 +14,8 @@
 
 #include <Storage/Storage.h>
 
+#include <Terminal.h>
+
 static void MakeFileName(uint32_t id, char *str);
 
 /* ============================================= */
@@ -18,93 +23,126 @@ static void MakeFileName(uint32_t id, char *str);
 /* ============================================= */
 
 static FATFS _FatFs;
-static uint8_t _IsStorageInit;
+static uint8_t StorageInit;
+static bool StorageDebugMode = false;
 
 // Инициализация хранилища
-StorageStatus InitStorage(void)
+bool InitStorage(void)
 {
 	FRESULT result;
-	_IsStorageInit = 0;
+	StorageInit = 0;
 
 	WORD status = (WORD)disk_initialize(0);
-	if (status)
-	{
-		if (status == STA_NODISK)
-			return StorageNoDevice;
-		if (status == STA_NOINIT)
-			return StorageInternalError;
-		if (status == STA_PROTECT)
-			return StorageWriteProtect;
+	if (status) {
+		if (StorageDebugMode) {
+			printf("Initialazing storage...");
+			if (status == STA_NODISK) {
+				print("no disk\n\r");
+			}
+			if (status == STA_NOINIT) {
+				print("interal error\n\r");
+			}
+			if (status == STA_PROTECT) {
+				print("write protect\n\r");
+			}
+		}
+
+		return false;
 	}
 
 	result = f_mount(0, &_FatFs);
-	if (result != FR_OK)
-		return StorageInternalError;
+	if (result != FR_OK) {
+		if (StorageDebugMode) {
+			print("unable to mount fs\n\r");
+		}
+		return false;
+	}
 
-	_IsStorageInit = 1;
-	return StorageNoError;
+	StorageInit = 1;
+	if (StorageDebugMode) {
+		print("ok\n\r");
+	}
+	return true;
 }
 
 // Сохранение кода в хранилище
-StorageStatus Save(IRCode *code)
+bool Save(IRCode *code)
 {
 	FIL file;
 	FRESULT res;
 	UINT bw;
 	char fName[8 + 1 + 3 + 1] = {'\0'}; // 8 name, + .bin + \0
 
-	if (!_IsStorageInit)
-		return StorageNoDevice;
+	if (!StorageInit) {
+		if (StorageDebugMode)
+			print("Storage not init\n\r");
+		return false;
+	}
+
 	MakeFileName(code->ID, fName);
 	res = f_open(&file, fName, FA_CREATE_ALWAYS | FA_WRITE);
-	if (res)
-	{
-		printf("Create file error: %d\n\r", res);
-		return StorageInternalError;
+	if (res) {
+		if (StorageDebugMode)
+			printf("Create file error: %d\n\r", res);
+		return false;
 	}
+
 	res = f_write(&file, code, sizeof(IRCode), &bw);
-	if (res || bw != sizeof(IRCode))
-	{
-		printf("Write file error: %d, bytes to write: %d\n\r", res, bw);
-		return StorageInternalError;
+	if (res || bw != sizeof(IRCode)) {
+		if (StorageDebugMode)
+			printf("Write file error: %d, bytes to write: %d\n\r", res, bw);
+		return false;
 	}
+
 	f_sync(&file);
-	return StorageNoError;
+	return true;
 }
 
 // Чтение из хранилища
-StorageStatus Open(const uint32_t id, IRCode *result)
+bool Open(const uint32_t id, IRCode *result)
 {
 	char fName[8 + 1 + 3 + 1] = {'\0'}; // 8 name, + .bin + \0
 	FRESULT res;
 	FIL file;
 	UINT btr = 0;
 
-	if (!_IsStorageInit)
-		return StorageNoDevice;
+	if (!StorageInit) {
+		if (StorageDebugMode)
+			print("Storage not init\n\r");
+		return false;
+	}
 
-	if (!result)
-		return StorageInternalError;
+
+	if (!result) {
+		if (StorageDebugMode)
+			print("Null pointer reference\n\r");
+		return false;
+	}
 
 	MakeFileName(id, fName);
 	res = f_open(&file, fName, FA_OPEN_EXISTING | FA_READ);
-	if (res)
-	{
-		printf("Error open file: %s, res: %d\n\r", fName, res);
-		return StorageNotFound;
+	if (res) {
+		if (StorageDebugMode)
+			printf("Error open file: %s, res: %d\n\r", fName, res);
+		return false;
 	}
 
 	res = f_read(&file, result, sizeof(IRCode), &btr);
-	if (res || btr != sizeof(IRCode))
-	{
-		printf("Error reading file: %d, bytes to read: %d\n\r", res, btr);
-		return StorageInternalError;
+	if (res || btr != sizeof(IRCode)) {
+		if (StorageDebugMode)
+			printf("Error reading file: %d, bytes to read: %d\n\r", res, btr);
+		return false;
 	}
 
-	if (id != result->ID)
-		return StorageInternalError;
+	if (id != result->ID) {
+		if (StorageDebugMode)
+			printf("Excpected ID: %u, but was : %u\n\r", (unsigned int)id, (unsigned int)result->ID);
+		return false;
+	}
 
-	return StorageNoError;
+	//TODO: Add check by CRC
+
+	return true;
 }
 
 
@@ -193,7 +231,12 @@ static FRESULT scan_files ( char* path)
 // Отображение содержимого хранилища
 void PrintConentStorage(void)
 {
-	char path[255] = {"0:"};
+	char path[259] = {"0:"};
 	scan_files(path);
+}
+
+/* Вклчюение отладочного режима хранилища */
+void SetStorageDebugMode(bool mode) {
+	StorageDebugMode = mode;
 }
 
