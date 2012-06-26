@@ -1,0 +1,1076 @@
+(PCB "/Users/denisbarahtanov/Documents/eagle/IrSystemPCB/IrSystem.brd"
+  (parser
+    (string_quote ")
+    (space_in_quoted_tokens on)
+    (host_cad CadSoft)
+    (host_version 'EAGLE Version 5.11.0 Copyright (c) 1988-2010 CadSoft')
+  )
+  (resolution inch 254000)
+  (unit inch)
+  (structure
+    (layer "1#Top"  (type signal))
+    (layer "16#Bottom"  (type signal))
+    (boundary 
+      (rect pcb  0.000000 0.000000 3.300000 2.500000)
+    )
+    (boundary (path signal 0 0.000000 0.000000 3.300000 0.000000))
+    (boundary (path signal 0 3.300000 0.000000 3.300000 2.500000))
+    (boundary (path signal 0 3.300000 2.500000 0.000000 2.500000))
+    (boundary (path signal 0 0.000000 2.500000 0.000000 0.000000))
+    (via
+       "Round1$0.032000"
+    )
+    (rule (width 0.020000)(clearance 0.012000))
+    (rule (clearance 0.008000 (type smd_pin)))
+    (rule (clearance 0.008000 (type smd_via)))
+    (rule (clearance 0.008000 (type smd_smd)))
+    (control
+      (via_at_smd on)
+    )
+  )
+  (placement
+    (place_control (flip_style rotate_first))
+    (component "C0805$rcl" 
+      (place "C1" 1.850000 1.500000 Front 0.000000)
+    )
+    (component "C0805$rcl" 
+      (place "C2" 1.700000 1.250000 Front 180.000000)
+    )
+    (component "C0805$rcl" 
+      (place "C3" 1.950000 1.750000 Front 270.000000)
+    )
+    (component "C0805$rcl" 
+      (place "C4" 0.800000 2.000000 Front 90.000000)
+    )
+    (component "C0805$rcl" 
+      (place "C5" 2.150000 1.200000 Front 180.000000)
+    )
+    (component "C0805$rcl" 
+      (place "C6" 1.925000 1.350000 Front 90.000000)
+    )
+    (component "C0805$rcl" 
+      (place "C7" 1.275000 0.825000 Front 0.000000)
+    )
+    (component "C0805$rcl" 
+      (place "C8" 1.275000 1.225000 Front 90.000000)
+    )
+    (component "C0805$rcl" 
+      (place "C9" 1.975000 0.525000 Front 90.000000)
+    )
+    (component "UD-6,3X7,7_NICHICON$rcl" 
+      (place "C10" 2.525000 0.275000 Front 90.000000)
+    )
+    (component "UD-6,3X7,7_NICHICON$rcl" 
+      (place "C11" 1.575000 0.275000 Front 90.000000)
+    )
+    (component "C0805$rcl" 
+      (place "C12" 1.900000 1.175000 Front 180.000000)
+    )
+    (component "C0805$rcl" 
+      (place "C13" 0.950000 1.525000 Front 0.000000)
+    )
+    (component "UD-6,3X7,7_NICHICON$rcl" 
+      (place "C14" 0.250000 0.450000 Front 0.000000)
+    )
+    (component "SMB$diode" 
+      (place "D1" 2.050000 0.275000 Front 0.000000)
+    )
+    (component "SMB$diode" 
+      (place "D2" 2.800000 0.450000 Front 270.000000)
+    )
+    (component "SO8$mc34063" 
+      (place "IC2" 2.200000 0.725000 Front 270.000000)
+    )
+    (component "SO08$maxim" 
+      (place "IC3" 0.800000 2.250000 Front 90.000000)
+    )
+    (component "1X03$pinhead" 
+      (place "JP1" 0.200000 0.900000 Front 90.000000)
+    )
+    (component "2X03$pinhead" 
+      (place "JP5" 1.450000 2.300000 Front 0.000000)
+    )
+    (component "L1812$rcl" 
+      (place "L1" 1.650000 0.675000 Front 180.000000)
+    )
+    (component "CHIPLED_1206$led" 
+      (place "LED1" 0.200000 1.875000 Front 270.000000)
+    )
+    (component "CHIPLED_1206$led" 
+      (place "LED2" 0.200000 1.750000 Front 90.000000)
+    )
+    (component "CHIPLED_1206$led" 
+      (place "LED3" 0.200000 1.625000 Front 90.000000)
+    )
+    (component "CHIPLED_1206$led" 
+      (place "LED4" 0.200000 1.500000 Front 90.000000)
+    )
+    (component "LED5MM$led" 
+      (place "LED5" 0.200000 1.250000 Front 180.000000)
+    )
+    (component "CSM-7X-DU$crystal" 
+      (place "Q1" 1.075000 1.000000 Front 90.000000)
+    )
+    (component "SOT223$transistor-pnp" 
+      (place "Q2" 2.100000 0.900000 Back 90.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R1" 0.950000 1.375000 Front 180.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R2" 1.275000 1.000000 Front 180.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R3" 2.100000 1.500000 Front 0.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R4" 2.100000 1.700000 Front 0.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R5" 2.100000 1.800000 Front 0.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R6" 2.100000 1.600000 Front 0.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R7" 2.175000 0.525000 Front 0.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R8" 2.375000 0.525000 Front 0.000000)
+    )
+    (component "R1206$rcl" 
+      (place "R9" 2.600000 0.750000 Front 90.000000)
+    )
+    (component "R1206$rcl" 
+      (place "R10" 0.475000 2.250000 Front 270.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R11" 0.550000 1.150000 Front 180.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R12" 0.550000 1.250000 Front 0.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R13" 2.000000 1.925000 Back 180.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R14" 2.000000 2.025000 Back 180.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R15" 2.000000 2.125000 Back 180.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R16" 2.000000 2.225000 Back 180.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R17" 2.000000 2.325000 Back 180.000000)
+    )
+    (component "M1206$rcl" 
+      (place "R18" 2.775000 1.475000 Back 180.000000)
+    )
+    (component "M1206$rcl" 
+      (place "R19" 2.775000 1.600000 Back 180.000000)
+    )
+    (component "M1206$rcl" 
+      (place "R20" 2.775000 1.725000 Back 180.000000)
+    )
+    (component "M1206$rcl" 
+      (place "R21" 2.775000 1.850000 Back 180.000000)
+    )
+    (component "M1206$rcl" 
+      (place "R22" 2.775000 1.975000 Back 180.000000)
+    )
+    (component "M1206$rcl" 
+      (place "R23" 2.775000 2.100000 Back 180.000000)
+    )
+    (component "M1206$rcl" 
+      (place "R24" 2.775000 2.225000 Back 180.000000)
+    )
+    (component "M1206$rcl" 
+      (place "R25" 2.775000 2.350000 Back 180.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R26" 1.500000 0.850000 Back 270.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R27" 0.200000 1.975000 Front 180.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R28" 0.450000 1.750000 Front 180.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R29" 0.450000 1.625000 Front 180.000000)
+    )
+    (component "R0805$rcl" 
+      (place "R30" 0.450000 1.500000 Front 180.000000)
+    )
+    (component "CTS-219-04$switch-dil" 
+      (place "S1" 2.450000 2.150000 Front 90.000000)
+    )
+    (component "CTS-219-02$switch-dil" 
+      (place "S2" 2.450000 1.750000 Front 270.000000)
+    )
+    (component "SOT223$transistor-neu-to92" 
+      (place "T1" 2.450000 1.125000 Back 270.000000)
+    )
+    (component "SOT223$transistor-neu-to92" 
+      (place "T2" 2.450000 1.425000 Back 90.000000)
+    )
+    (component "SOT223$transistor-neu-to92" 
+      (place "T3" 2.450000 1.700000 Back 90.000000)
+    )
+    (component "SOT223$transistor-neu-to92" 
+      (place "T4" 2.450000 1.975000 Back 90.000000)
+    )
+    (component "SOT223$transistor-neu-to92" 
+      (place "T5" 2.450000 2.250000 Back 90.000000)
+    )
+    (component "SDCMF-10915W010$kingfont_sdcmf10915w010_covek" 
+      (place "U$1" 1.300000 0.650000 Back 90.000000)
+    )
+    (component "TQFP64$stm32" 
+      (place "U1" 1.500000 1.600000 Front 90.000000)
+    )
+    (component "AK500/2$con-ptr500" 
+      (place "X1" 0.200000 2.250000 Front 90.000000)
+    )
+    (component "AK500/2$con-ptr500" 
+      (place "X2" 3.100000 0.275000 Front 90.000000)
+    )
+    (component "AK500/8$con-ptr500" 
+      (place "X3" 3.100000 1.650000 Front 90.000000)
+    )
+  )
+  (library
+    (image "AK500/2$con-ptr500"
+      (outline(circ "1#Top" 0.040000 0.099000 0.120000))
+      (outline(circ "1#Top" 0.040000 -0.099000 0.120000))
+      (outline(rect "1#Top" -0.015000 -0.075000 0.015000 0.075000))
+      (pin "Oblong1" "1" -0.099000 0.000000)
+      (pin "Oblong1" "2" 0.099000 0.000000)
+    )
+    (image "AK500/8$con-ptr500"
+      (outline(circ "1#Top" 0.040000 -0.492000 0.120000))
+      (outline(circ "1#Top" 0.040000 -0.690000 0.120000))
+      (outline(circ "1#Top" 0.040000 -0.098000 0.120000))
+      (outline(circ "1#Top" 0.040000 -0.296000 0.120000))
+      (outline(circ "1#Top" 0.040000 0.296000 0.120000))
+      (outline(circ "1#Top" 0.040000 0.098000 0.120000))
+      (outline(circ "1#Top" 0.040000 0.690000 0.120000))
+      (outline(circ "1#Top" 0.040000 0.492000 0.120000))
+      (outline(rect "1#Top" -0.606000 -0.075000 -0.576000 0.075000))
+      (outline(rect "1#Top" -0.212000 -0.075000 -0.182000 0.075000))
+      (outline(rect "1#Top" 0.182000 -0.075000 0.212000 0.075000))
+      (outline(rect "1#Top" 0.576000 -0.075000 0.606000 0.075000))
+      (pin "Oblong1" "1" -0.690000 0.000000)
+      (pin "Oblong1" "2" -0.492000 0.000000)
+      (pin "Oblong1" "3" -0.296000 0.000000)
+      (pin "Oblong1" "4" -0.098000 0.000000)
+      (pin "Oblong1" "5" 0.098000 0.000000)
+      (pin "Oblong1" "6" 0.296000 0.000000)
+      (pin "Oblong1" "7" 0.492000 0.000000)
+      (pin "Oblong1" "8" 0.690000 0.000000)
+    )
+    (image "CSM-7X-DU$crystal"
+      (pin "Rectangle1" "1" -0.187008 0.000000)
+      (pin "Rectangle1" "2" 0.187008 0.000000)
+    )
+    (image "SMB$diode"
+      (pin "Rectangle2" "A" 0.086614 0.000000)
+      (pin "Rectangle2" "C" -0.086614 0.000000)
+    )
+    (image "SDCMF-10915W010$kingfont_sdcmf10915w010_covek"
+      (keepout (circ signal 0.070992 0.390000 0.410000))
+      (keepout (circ signal 0.051307 -0.440000 0.410000))
+      (pin "Rectangle3" "1" 0.290000 0.530000)
+      (pin "Rectangle3" "2" 0.190000 0.530000)
+      (pin "Rectangle3" "3" 0.090000 0.530000)
+      (pin "Rectangle3" "4" -0.010000 0.530000)
+      (pin "Rectangle3" "5" -0.110000 0.530000)
+      (pin "Rectangle3" "6" -0.210000 0.530000)
+      (pin "Rectangle3" "7" -0.310000 0.530000)
+      (pin "Rectangle3" "8" -0.370000 0.530000)
+      (pin "Rectangle3" "9" 0.390000 0.530000)
+      (pin "Rectangle3" "10" -0.470000 0.530000)
+      (pin "Rectangle3" "11" -0.420000 0.530000)
+      (pin "Rectangle4" "12" 0.480000 0.450000)
+      (pin "Rectangle4" "13" 0.550000 -0.100000)
+      (pin "Rectangle4" "14" -0.520000 -0.100000)
+      (pin "Rectangle4" "15" -0.520000 0.450000)
+    )
+    (image "CHIPLED_1206$led"
+      (outline(rect "1#Top" -0.033465 0.013780 -0.020669 0.030512))
+      (outline(rect "1#Top" 0.020669 0.013780 0.033465 0.030512))
+      (outline(rect "1#Top" -0.006890 0.000000 0.006890 0.013780))
+      (pin "Rectangle5" "A" 0.000000 -0.068898)
+      (pin "Rectangle5" "C" 0.000000 0.068898)
+    )
+    (image "LED5MM$led"
+      (outline(circ "1#Top" 0.200000 0.000000 0.000000))
+      (pin "Octagon1" "A" -0.050000 0.000000)
+      (pin "Octagon1" "K" 0.050000 0.000000)
+    )
+    (image "SO08$maxim"
+      (pin "Rectangle6" "1" -0.075000 -0.121000)
+      (pin "Rectangle6" "2" -0.025000 -0.121000)
+      (pin "Rectangle6" "3" 0.025000 -0.121000)
+      (pin "Rectangle6" "4" 0.075000 -0.121000)
+      (pin "Rectangle6" "5" 0.075000 0.121000)
+      (pin "Rectangle6" "6" 0.025000 0.121000)
+      (pin "Rectangle6" "7" -0.025000 0.121000)
+      (pin "Rectangle6" "8" -0.075000 0.121000)
+    )
+    (image "SO8$mc34063"
+      (outline(rect "1#Top" -0.085000 0.077000 -0.065000 0.122000))
+      (outline(rect "1#Top" -0.035000 0.077000 -0.015000 0.122000))
+      (outline(rect "1#Top" 0.015000 0.077000 0.035000 0.122000))
+      (outline(rect "1#Top" 0.065000 0.077000 0.085000 0.122000))
+      (outline(rect "1#Top" 0.065000 -0.122000 0.085000 -0.077000))
+      (outline(rect "1#Top" 0.015000 -0.122000 0.035000 -0.077000))
+      (outline(rect "1#Top" -0.035000 -0.122000 -0.015000 -0.077000))
+      (outline(rect "1#Top" -0.085000 -0.122000 -0.065000 -0.077000))
+      (pin "Rectangle7" "1" -0.075000 -0.121000)
+      (pin "Rectangle7" "2" -0.025000 -0.121000)
+      (pin "Rectangle7" "3" 0.025000 -0.121000)
+      (pin "Rectangle7" "4" 0.075000 -0.121000)
+      (pin "Rectangle7" "5" 0.075000 0.121000)
+      (pin "Rectangle7" "6" 0.025000 0.121000)
+      (pin "Rectangle7" "7" -0.025000 0.121000)
+      (pin "Rectangle7" "8" -0.075000 0.121000)
+    )
+    (image "1X03$pinhead"
+      (pin "Oblong2" "1" -0.100000 0.000000)
+      (pin "Oblong2" "2" 0.000000 0.000000)
+      (pin "Oblong2" "3" 0.100000 0.000000)
+    )
+    (image "2X03$pinhead"
+      (pin "Octagon2" "1" -0.100000 -0.050000)
+      (pin "Octagon2" "2" -0.100000 0.050000)
+      (pin "Octagon2" "3" 0.000000 -0.050000)
+      (pin "Octagon2" "4" 0.000000 0.050000)
+      (pin "Octagon2" "5" 0.100000 -0.050000)
+      (pin "Octagon2" "6" 0.100000 0.050000)
+    )
+    (image "C0805$rcl"
+      (place_keepout(path "1#Top" 0 0.077677 0.038701 0.077677 -0.038701 -0.077677 -0.038701 -0.077677 0.038701 ))
+      (pin "Rectangle8" "1" -0.037402 0.000000)
+      (pin "Rectangle8" "2" 0.037402 0.000000)
+    )
+    (image "L1812$rcl"
+      (pin "Rectangle9" "1" -0.076772 0.000000)
+      (pin "Rectangle9" "2" 0.076772 0.000000)
+    )
+    (image "M1206$rcl"
+      (place_keepout(path "1#Top" 0 0.097362 0.058386 0.097362 -0.058386 -0.097362 -0.058386 -0.097362 0.058386 ))
+      (pin "Rectangle10" "1" -0.055118 0.000000)
+      (pin "Rectangle10" "2" 0.055118 0.000000)
+    )
+    (image "R0805$rcl"
+      (place_keepout(path "1#Top" 0 -0.077677 -0.038701 -0.077677 0.038701 0.077677 0.038701 0.077677 -0.038701 ))
+      (pin "Rectangle8" "1" -0.037402 0.000000)
+      (pin "Rectangle8" "2" 0.037402 0.000000)
+    )
+    (image "R1206$rcl"
+      (place_keepout(path "1#Top" 0 -0.097362 -0.038701 -0.097362 0.038701 0.097362 0.038701 0.097362 -0.038701 ))
+      (pin "Rectangle11" "1" -0.055984 0.000000)
+      (pin "Rectangle11" "2" 0.055984 0.000000)
+    )
+    (image "UD-6,3X7,7_NICHICON$rcl"
+      (pin "Rectangle12" "+" 0.092520 0.000000)
+      (pin "Rectangle12" "-" -0.092520 0.000000)
+    )
+    (image "TQFP64$stm32"
+      (outline(circ "1#Top" 0.022260 -0.157480 0.157480))
+      (outline(rect "1#Top" -0.236220 0.143701 -0.188976 0.151575))
+      (outline(rect "1#Top" -0.236220 0.124016 -0.188976 0.131890))
+      (outline(rect "1#Top" -0.236220 0.104331 -0.188976 0.112205))
+      (outline(rect "1#Top" -0.236220 0.084646 -0.188976 0.092520))
+      (outline(rect "1#Top" -0.236220 0.064961 -0.188976 0.072835))
+      (outline(rect "1#Top" -0.236220 0.045276 -0.188976 0.053150))
+      (outline(rect "1#Top" -0.236220 0.025591 -0.188976 0.033465))
+      (outline(rect "1#Top" -0.236220 0.005906 -0.188976 0.013780))
+      (outline(rect "1#Top" -0.236220 -0.013780 -0.188976 -0.005906))
+      (outline(rect "1#Top" -0.236220 -0.033465 -0.188976 -0.025591))
+      (outline(rect "1#Top" -0.236220 -0.053150 -0.188976 -0.045276))
+      (outline(rect "1#Top" -0.236220 -0.072835 -0.188976 -0.064961))
+      (outline(rect "1#Top" -0.236220 -0.092520 -0.188976 -0.084646))
+      (outline(rect "1#Top" -0.236220 -0.112205 -0.188976 -0.104331))
+      (outline(rect "1#Top" -0.236220 -0.131890 -0.188976 -0.124016))
+      (outline(rect "1#Top" -0.236220 -0.151575 -0.188976 -0.143701))
+      (outline(rect "1#Top" -0.151575 -0.236220 -0.143701 -0.188976))
+      (outline(rect "1#Top" -0.131890 -0.236220 -0.124016 -0.188976))
+      (outline(rect "1#Top" -0.112205 -0.236220 -0.104331 -0.188976))
+      (outline(rect "1#Top" -0.092520 -0.236220 -0.084646 -0.188976))
+      (outline(rect "1#Top" -0.072835 -0.236220 -0.064961 -0.188976))
+      (outline(rect "1#Top" -0.053150 -0.236220 -0.045276 -0.188976))
+      (outline(rect "1#Top" -0.033465 -0.236220 -0.025591 -0.188976))
+      (outline(rect "1#Top" -0.013780 -0.236220 -0.005906 -0.188976))
+      (outline(rect "1#Top" 0.005906 -0.236220 0.013780 -0.188976))
+      (outline(rect "1#Top" 0.025591 -0.236220 0.033465 -0.188976))
+      (outline(rect "1#Top" 0.045276 -0.236220 0.053150 -0.188976))
+      (outline(rect "1#Top" 0.064961 -0.236220 0.072835 -0.188976))
+      (outline(rect "1#Top" 0.084646 -0.236220 0.092520 -0.188976))
+      (outline(rect "1#Top" 0.104331 -0.236220 0.112205 -0.188976))
+      (outline(rect "1#Top" 0.124016 -0.236220 0.131890 -0.188976))
+      (outline(rect "1#Top" 0.143701 -0.236220 0.151575 -0.188976))
+      (outline(rect "1#Top" 0.188976 -0.151575 0.236220 -0.143701))
+      (outline(rect "1#Top" 0.188976 -0.131890 0.236220 -0.124016))
+      (outline(rect "1#Top" 0.188976 -0.112205 0.236220 -0.104331))
+      (outline(rect "1#Top" 0.188976 -0.092520 0.236220 -0.084646))
+      (outline(rect "1#Top" 0.188976 -0.072835 0.236220 -0.064961))
+      (outline(rect "1#Top" 0.188976 -0.053150 0.236220 -0.045276))
+      (outline(rect "1#Top" 0.188976 -0.033465 0.236220 -0.025591))
+      (outline(rect "1#Top" 0.188976 -0.013780 0.236220 -0.005906))
+      (outline(rect "1#Top" 0.188976 0.005906 0.236220 0.013780))
+      (outline(rect "1#Top" 0.188976 0.025591 0.236220 0.033465))
+      (outline(rect "1#Top" 0.188976 0.045276 0.236220 0.053150))
+      (outline(rect "1#Top" 0.188976 0.064961 0.236220 0.072835))
+      (outline(rect "1#Top" 0.188976 0.084646 0.236220 0.092520))
+      (outline(rect "1#Top" 0.188976 0.104331 0.236220 0.112205))
+      (outline(rect "1#Top" 0.188976 0.124016 0.236220 0.131890))
+      (outline(rect "1#Top" 0.188976 0.143701 0.236220 0.151575))
+      (outline(rect "1#Top" 0.143701 0.188976 0.151575 0.236220))
+      (outline(rect "1#Top" 0.124016 0.188976 0.131890 0.236220))
+      (outline(rect "1#Top" 0.104331 0.188976 0.112205 0.236220))
+      (outline(rect "1#Top" 0.084646 0.188976 0.092520 0.236220))
+      (outline(rect "1#Top" 0.064961 0.188976 0.072835 0.236220))
+      (outline(rect "1#Top" 0.045276 0.188976 0.053150 0.236220))
+      (outline(rect "1#Top" 0.025591 0.188976 0.033465 0.236220))
+      (outline(rect "1#Top" 0.005906 0.188976 0.013780 0.236220))
+      (outline(rect "1#Top" -0.013780 0.188976 -0.005906 0.236220))
+      (outline(rect "1#Top" -0.033465 0.188976 -0.025591 0.236220))
+      (outline(rect "1#Top" -0.053150 0.188976 -0.045276 0.236220))
+      (outline(rect "1#Top" -0.072835 0.188976 -0.064961 0.236220))
+      (outline(rect "1#Top" -0.092520 0.188976 -0.084646 0.236220))
+      (outline(rect "1#Top" -0.112205 0.188976 -0.104331 0.236220))
+      (outline(rect "1#Top" -0.131890 0.188976 -0.124016 0.236220))
+      (outline(rect "1#Top" -0.151575 0.188976 -0.143701 0.236220))
+      (pin "Rectangle13" "1" -0.224409 0.147638)
+      (pin "Rectangle13" "2" -0.224409 0.127953)
+      (pin "Rectangle13" "3" -0.224409 0.108268)
+      (pin "Rectangle13" "4" -0.224409 0.088583)
+      (pin "Rectangle13" "5" -0.224409 0.068898)
+      (pin "Rectangle13" "6" -0.224409 0.049213)
+      (pin "Rectangle13" "7" -0.224409 0.029528)
+      (pin "Rectangle13" "8" -0.224409 0.009843)
+      (pin "Rectangle13" "9" -0.224409 -0.009843)
+      (pin "Rectangle13" "10" -0.224409 -0.029528)
+      (pin "Rectangle13" "11" -0.224409 -0.049213)
+      (pin "Rectangle13" "12" -0.224409 -0.068898)
+      (pin "Rectangle13" "13" -0.224409 -0.088583)
+      (pin "Rectangle13" "14" -0.224409 -0.108268)
+      (pin "Rectangle13" "15" -0.224409 -0.127953)
+      (pin "Rectangle13" "16" -0.224409 -0.147638)
+      (pin "Rectangle14" "17" -0.147638 -0.224409)
+      (pin "Rectangle14" "18" -0.127953 -0.224409)
+      (pin "Rectangle14" "19" -0.108268 -0.224409)
+      (pin "Rectangle14" "20" -0.088583 -0.224409)
+      (pin "Rectangle14" "21" -0.068898 -0.224409)
+      (pin "Rectangle14" "22" -0.049213 -0.224409)
+      (pin "Rectangle14" "23" -0.029528 -0.224409)
+      (pin "Rectangle14" "24" -0.009843 -0.224409)
+      (pin "Rectangle14" "25" 0.009843 -0.224409)
+      (pin "Rectangle14" "26" 0.029528 -0.224409)
+      (pin "Rectangle14" "27" 0.049213 -0.224409)
+      (pin "Rectangle14" "28" 0.068898 -0.224409)
+      (pin "Rectangle14" "29" 0.088583 -0.224409)
+      (pin "Rectangle14" "30" 0.108268 -0.224409)
+      (pin "Rectangle14" "31" 0.127953 -0.224409)
+      (pin "Rectangle14" "32" 0.147638 -0.224409)
+      (pin "Rectangle13" "33" 0.224409 -0.147638)
+      (pin "Rectangle13" "34" 0.224409 -0.127953)
+      (pin "Rectangle13" "35" 0.224409 -0.108268)
+      (pin "Rectangle13" "36" 0.224409 -0.088583)
+      (pin "Rectangle13" "37" 0.224409 -0.068898)
+      (pin "Rectangle13" "38" 0.224409 -0.049213)
+      (pin "Rectangle13" "39" 0.224409 -0.029528)
+      (pin "Rectangle13" "40" 0.224409 -0.009843)
+      (pin "Rectangle13" "41" 0.224409 0.009843)
+      (pin "Rectangle13" "42" 0.224409 0.029528)
+      (pin "Rectangle13" "43" 0.224409 0.049213)
+      (pin "Rectangle13" "44" 0.224409 0.068898)
+      (pin "Rectangle13" "45" 0.224409 0.088583)
+      (pin "Rectangle13" "46" 0.224409 0.108268)
+      (pin "Rectangle13" "47" 0.224409 0.127953)
+      (pin "Rectangle13" "48" 0.224409 0.147638)
+      (pin "Rectangle14" "49" 0.147638 0.224409)
+      (pin "Rectangle14" "50" 0.127953 0.224409)
+      (pin "Rectangle14" "51" 0.108268 0.224409)
+      (pin "Rectangle14" "52" 0.088583 0.224409)
+      (pin "Rectangle14" "53" 0.068898 0.224409)
+      (pin "Rectangle14" "54" 0.049213 0.224409)
+      (pin "Rectangle14" "55" 0.029528 0.224409)
+      (pin "Rectangle14" "56" 0.009843 0.224409)
+      (pin "Rectangle14" "57" -0.009843 0.224409)
+      (pin "Rectangle14" "58" -0.029528 0.224409)
+      (pin "Rectangle14" "59" -0.049213 0.224409)
+      (pin "Rectangle14" "60" -0.068898 0.224409)
+      (pin "Rectangle14" "61" -0.088583 0.224409)
+      (pin "Rectangle14" "62" -0.108268 0.224409)
+      (pin "Rectangle14" "63" -0.127953 0.224409)
+      (pin "Rectangle14" "64" -0.147638 0.224409)
+    )
+    (image "CTS-219-02$switch-dil"
+      (outline(rect "1#Top" -0.079528 -0.078740 -0.020472 -0.019685))
+      (outline(rect "1#Top" 0.020472 -0.078740 0.079528 -0.019685))
+      (pin "Rectangle15" "1" -0.050000 -0.169291)
+      (pin "Rectangle15" "2" 0.050000 -0.169291)
+      (pin "Rectangle16" "3" 0.050000 0.169291)
+      (pin "Rectangle16" "4" -0.050000 0.169291)
+    )
+    (image "CTS-219-04$switch-dil"
+      (outline(rect "1#Top" -0.179528 -0.078740 -0.120472 -0.019685))
+      (outline(rect "1#Top" -0.079528 -0.078740 -0.020472 -0.019685))
+      (outline(rect "1#Top" 0.020472 -0.078740 0.079528 -0.019685))
+      (outline(rect "1#Top" 0.120472 -0.078740 0.179528 -0.019685))
+      (pin "Rectangle15" "1" -0.150000 -0.169291)
+      (pin "Rectangle15" "2" -0.050000 -0.169291)
+      (pin "Rectangle15" "3" 0.050000 -0.169291)
+      (pin "Rectangle15" "4" 0.150000 -0.169291)
+      (pin "Rectangle16" "5" 0.150000 0.169291)
+      (pin "Rectangle16" "6" 0.050000 0.169291)
+      (pin "Rectangle16" "7" -0.050000 0.169291)
+      (pin "Rectangle16" "8" -0.150000 0.169291)
+    )
+    (image "SOT223$transistor-neu-to92"
+      (pin "Rectangle17" "1" -0.091000 -0.122000)
+      (pin "Rectangle17" "2" 0.000000 -0.122000)
+      (pin "Rectangle17" "3" 0.091000 -0.122000)
+      (pin "Rectangle18" "4" 0.000000 0.122008)
+    )
+    (image "SOT223$transistor-pnp"
+      (pin "Rectangle17" "1" -0.091000 -0.122000)
+      (pin "Rectangle17" "2" 0.000000 -0.122000)
+      (pin "Rectangle17" "3" 0.091000 -0.122000)
+      (pin "Rectangle18" "4" 0.000000 0.122008)
+    )
+    (padstack "ViaDefault$0.032000"
+      (shape (circle signal 0.056000 0 0))
+    )
+    (padstack "Round1$0.032000" 
+      (shape (circle "1#Top" 0.056000 0 0))
+      (shape (circle "16#Bottom" 0.056000 0 0))
+      (attach off)
+    )
+    (padstack "Oblong1" 
+      (shape (path signal 0.102000 0.000000 -0.051000 0.000000 0.051000))
+      (attach off)
+    )
+    (padstack "Rectangle1" 
+      (shape (rect "1#Top" -0.108268 -0.039370 0.108268 0.039370))
+      (attach off)
+    )
+    (padstack "Rectangle2" 
+      (shape (rect "1#Top" -0.047244 -0.047244 0.047244 0.047244))
+      (attach off)
+    )
+    (padstack "Rectangle3" 
+      (shape (rect "1#Top" -0.014000 -0.028000 0.014000 0.028000))
+      (attach off)
+    )
+    (padstack "Rectangle4" 
+      (shape (rect "1#Top" -0.025000 -0.050000 0.025000 0.050000))
+      (attach off)
+    )
+    (padstack "Rectangle5" 
+      (shape (rect "1#Top" -0.029528 -0.029528 0.029528 0.029528))
+      (attach off)
+    )
+    (padstack "Octagon1" 
+      (shape (polygon "1#Top" 0 0.041000 0.016983 0.016983 0.041000 -0.016983 0.041000 -0.041000 0.016983 -0.041000 -0.016983 -0.016983 -0.041000 0.016983 -0.041000 0.041000 -0.016983 ))
+      (shape (polygon "16#Bottom" 0 0.041000 0.016983 0.016983 0.041000 -0.016983 0.041000 -0.041000 0.016983 -0.041000 -0.016983 -0.016983 -0.041000 0.016983 -0.041000 0.041000 -0.016983 ))
+      (attach off)
+    )
+    (padstack "Rectangle6" 
+      (shape (rect "1#Top" -0.013000 -0.040000 0.013000 0.040000))
+      (attach off)
+    )
+    (padstack "Rectangle7" 
+      (shape (rect "1#Top" -0.013000 -0.040000 0.013000 0.040000))
+      (attach off)
+    )
+    (padstack "Oblong2" 
+      (shape (path signal 0.090000 0.000000 -0.045000 0.000000 0.045000))
+      (attach off)
+    )
+    (padstack "Octagon2" 
+      (shape (polygon "1#Top" 0 0.045000 0.018640 0.018640 0.045000 -0.018640 0.045000 -0.045000 0.018640 -0.045000 -0.018640 -0.018640 -0.045000 0.018640 -0.045000 0.045000 -0.018640 ))
+      (shape (polygon "16#Bottom" 0 0.045000 0.018640 0.018640 0.045000 -0.018640 0.045000 -0.045000 0.018640 -0.045000 -0.018640 -0.018640 -0.045000 0.018640 -0.045000 0.045000 -0.018640 ))
+      (attach off)
+    )
+    (padstack "Rectangle8" 
+      (shape (rect "1#Top" -0.025591 -0.029528 0.025591 0.029528))
+      (attach off)
+    )
+    (padstack "Rectangle9" 
+      (shape (rect "1#Top" -0.037402 -0.066929 0.037402 0.066929))
+      (attach off)
+    )
+    (padstack "Rectangle10" 
+      (shape (rect "1#Top" -0.031496 -0.039370 0.031496 0.039370))
+      (attach off)
+    )
+    (padstack "Rectangle11" 
+      (shape (rect "1#Top" -0.031496 -0.035492 0.031496 0.035492))
+      (attach off)
+    )
+    (padstack "Rectangle12" 
+      (shape (rect "1#Top" -0.055118 -0.019685 0.055118 0.019685))
+      (attach off)
+    )
+    (padstack "Rectangle13" 
+      (shape (rect "1#Top" -0.023622 -0.005906 0.023622 0.005906))
+      (attach off)
+    )
+    (padstack "Rectangle14" 
+      (shape (rect "1#Top" -0.005906 -0.023622 0.005906 0.023622))
+      (attach off)
+    )
+    (padstack "Rectangle15" 
+      (shape (rect "1#Top" -0.022244 -0.048031 0.022244 0.048031))
+      (attach off)
+    )
+    (padstack "Rectangle16" 
+      (shape (rect "1#Top" -0.022244 -0.048031 0.022244 0.048031))
+      (attach off)
+    )
+    (padstack "Rectangle17" 
+      (shape (rect "1#Top" -0.024000 -0.044000 0.024000 0.044000))
+      (attach off)
+    )
+    (padstack "Rectangle18" 
+      (shape (rect "1#Top" -0.070866 -0.043307 0.070866 0.043307))
+      (attach off)
+    )
+  )
+  (network
+    (net "+12V"
+      (pins  "D2"-"A" "X2"-"2" "X3"-"8" "X3"-"2" "X3"-"4" "X3"-"6")
+    )
+    (net "GND"
+      (pins  "IC3"-"5" "C6"-"2" "C7"-"2" "C8"-"2" "C9"-"1" "IC2"-"4" "R7"-"1" "D1"-"A" "C10"-"-" "C11"-"-" "X2"-"1" "C12"-"2" "JP1"-"1" "T1"-"3" "U$1"-"12" "U$1"-"13" "U$1"-"14" "U$1"-"15" "U$1"-"3" "U$1"-"6" "C14"-"-" "U1"-"18" "C13"-"2" "C4"-"2" "U1"-"63" "C3"-"2" "U1"-"47" "C2"-"2" "U1"-"31" "U1"-"12" "C1"-"1" "C5"-"2" "S2"-"3" "S2"-"4" "LED5"-"K" "S1"-"1" "S1"-"2" "S1"-"3" "S1"-"4" "JP5"-"3")
+    )
+    (net "N$1"
+      (pins  "S1"-"5" "U1"-"36")
+    )
+    (net "N$2"
+      (pins  "R2"-"1" "U1"-"6")
+    )
+    (net "N$3"
+      (pins  "C6"-"1" "R1"-"1" "U1"-"7")
+    )
+    (net "N$4"
+      (pins  "R2"-"2" "Q1"-"1" "C7"-"1")
+    )
+    (net "N$5"
+      (pins  "Q1"-"2" "C8"-"1" "U1"-"5")
+    )
+    (net "N$6"
+      (pins  "R3"-"1" "R4"-"1" "U1"-"60")
+    )
+    (net "N$7"
+      (pins  "R4"-"2" "S2"-"2")
+    )
+    (net "N$8"
+      (pins  "S2"-"1" "R5"-"2")
+    )
+    (net "N$9"
+      (pins  "C9"-"2" "IC2"-"3")
+    )
+    (net "N$10"
+      (pins  "IC2"-"6" "R9"-"1" "C10"-"+" "D2"-"C")
+    )
+    (net "N$11"
+      (pins  "R17"-"1" "U1"-"37")
+    )
+    (net "N$12"
+      (pins  "R7"-"2" "IC2"-"5" "R8"-"1")
+    )
+    (net "N$13"
+      (pins  "IC2"-"7" "IC2"-"8" "R9"-"2" "IC2"-"1")
+    )
+    (net "N$14"
+      (pins  "IC3"-"7" "R10"-"2" "X1"-"1")
+    )
+    (net "N$15"
+      (pins  "IC3"-"6" "R10"-"1" "X1"-"2")
+    )
+    (net "N$16"
+      (pins  "D1"-"C" "IC2"-"2" "L1"-"1")
+    )
+    (net "N$17"
+      (pins  "S1"-"6" "U1"-"35")
+    )
+    (net "N$18"
+      (pins  "S1"-"7" "U1"-"34")
+    )
+    (net "N$19"
+      (pins  "S1"-"8" "U1"-"33")
+    )
+    (net "N$20"
+      (pins  "IC3"-"1" "U1"-"17")
+    )
+    (net "N$21"
+      (pins  "IC3"-"4" "U1"-"16")
+    )
+    (net "N$22"
+      (pins  "U$1"-"4" "Q2"-"2")
+    )
+    (net "N$23"
+      (pins  "U1"-"46" "JP5"-"5")
+    )
+    (net "N$24"
+      (pins  "JP1"-"2" "U1"-"8" "R11"-"2")
+    )
+    (net "N$25"
+      (pins  "U1"-"42" "JP5"-"4")
+    )
+    (net "N$26"
+      (pins  "U1"-"43" "JP5"-"6")
+    )
+    (net "N$28"
+      (pins  "U1"-"15" "R12"-"1" "LED5"-"A")
+    )
+    (net "N$29"
+      (pins  "T1"-"4" "T5"-"3" "T4"-"3" "T3"-"3" "T2"-"3")
+    )
+    (net "N$30"
+      (pins  "T1"-"1" "R13"-"2")
+    )
+    (net "N$31"
+      (pins  "T2"-"1" "R14"-"2")
+    )
+    (net "N$32"
+      (pins  "T3"-"1" "R15"-"2")
+    )
+    (net "N$33"
+      (pins  "T4"-"1" "R16"-"2")
+    )
+    (net "N$34"
+      (pins  "T5"-"1" "R17"-"2")
+    )
+    (net "N$35"
+      (pins  "T2"-"4" "R19"-"1" "R18"-"1")
+    )
+    (net "N$36"
+      (pins  "R16"-"1" "U1"-"38")
+    )
+    (net "N$37"
+      (pins  "R19"-"2" "X3"-"1" "R18"-"2")
+    )
+    (net "N$38"
+      (pins  "R15"-"1" "U1"-"39")
+    )
+    (net "N$39"
+      (pins  "R20"-"1" "R21"-"1" "T3"-"4")
+    )
+    (net "N$40"
+      (pins  "R20"-"2" "R21"-"2" "X3"-"3")
+    )
+    (net "N$41"
+      (pins  "R22"-"2" "X3"-"5" "R23"-"2")
+    )
+    (net "N$42"
+      (pins  "R22"-"1" "R23"-"1" "T4"-"4")
+    )
+    (net "N$43"
+      (pins  "R25"-"1" "R24"-"1" "T5"-"4")
+    )
+    (net "N$44"
+      (pins  "R24"-"2" "R25"-"2" "X3"-"7")
+    )
+    (net "N$45"
+      (pins  "R14"-"1" "U1"-"40")
+    )
+    (net "N$46"
+      (pins  "U1"-"49" "JP5"-"2")
+    )
+    (net "N$50"
+      (pins  "R27"-"2" "LED1"-"A")
+    )
+    (net "N$51"
+      (pins  "U1"-"30" "LED4"-"C")
+    )
+    (net "N$52"
+      (pins  "U1"-"29" "LED3"-"C")
+    )
+    (net "N$53"
+      (pins  "U1"-"62" "LED2"-"C")
+    )
+    (net "N$54"
+      (pins  "U1"-"61" "LED1"-"C")
+    )
+    (net "N$55"
+      (pins  "R28"-"2" "LED2"-"A")
+    )
+    (net "N$56"
+      (pins  "R29"-"2" "LED3"-"A")
+    )
+    (net "N$57"
+      (pins  "R30"-"2" "LED4"-"A")
+    )
+    (net "N$60"
+      (pins  "Q2"-"1" "R26"-"2")
+    )
+    (net "PA5"
+      (pins  "U1"-"21" "U$1"-"5")
+    )
+    (net "PA6"
+      (pins  "U1"-"22" "U$1"-"7")
+    )
+    (net "PA7"
+      (pins  "U1"-"23" "U$1"-"2")
+    )
+    (net "PB0"
+      (pins  "U1"-"26" "R26"-"1")
+    )
+    (net "PB1"
+      (pins  "U1"-"27" "U$1"-"1")
+    )
+    (net "PB2"
+      (pins  "R5"-"1" "R6"-"1" "U1"-"28")
+    )
+    (net "PB3"
+      (pins  "U1"-"55" "IC3"-"3")
+    )
+    (net "PB4"
+      (pins  "U1"-"56" "IC3"-"2")
+    )
+    (net "PB6"
+      (pins  "U1"-"58" "R13"-"1")
+    )
+    (net "VCC"
+      (pins  "IC3"-"8" "L1"-"2" "R8"-"2" "C11"-"+" "R1"-"2" "R3"-"2" "R6"-"2" "C12"-"1" "JP1"-"3" "R11"-"1" "R12"-"2" "Q2"-"3" "R30"-"1" "R27"-"1" "R28"-"1" "R29"-"1" "C14"-"+" "C2"-"1" "U1"-"32" "C3"-"1" "U1"-"48" "C4"-"1" "U1"-"64" "C13"-"1" "U1"-"19" "U1"-"13" "C1"-"2" "U1"-"1" "C5"-"1" "JP5"-"1")
+    )
+  )
+  (wiring
+    (wire
+      (path "1#Top" 0.016000 1.372047 1.824409 1.372047 2.150000) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.372047 2.150000 1.450000 2.150000) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.450000 2.150000 1.450000 2.250000) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.100000 1.475000 1.102953 1.472047) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.102953 1.472047 1.275591 1.472047) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 0.987402 1.525000 1.100000 1.525000) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.100000 1.525000 1.100000 1.475000) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.275591 1.472047 1.372047 1.472047) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.372047 1.472047 1.500000 1.600000) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.500000 1.600000 1.627953 1.727953) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.627953 1.727953 1.724409 1.727953) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.568898 1.531102 1.568898 1.375591) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.500000 1.600000 1.568898 1.531102) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.627953 1.472047 1.724409 1.472047) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.568898 1.531102 1.627953 1.472047) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.275000 1.375000 1.275000 1.262402) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.372047 1.472047 1.275000 1.375000) 
+      (net "GND")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.312402 1.000000 1.450787 1.138386) 
+      (net "N$2")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.450787 1.138386 1.450787 1.375591) 
+      (net "N$2")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.237598 0.725000 1.237598 0.825000) 
+      (net "N$4")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.075000 0.725000 1.237598 0.725000) 
+      (net "N$4")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.075000 0.725000 1.075000 0.812992) 
+      (net "N$4")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.237598 0.825000 1.237598 1.000000) 
+      (net "N$4")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.075000 1.187008 1.075591 1.187598) 
+      (net "N$5")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.075591 1.187598 1.275000 1.187598) 
+      (net "N$5")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.275000 1.187598 1.431102 1.187598) 
+      (net "N$5")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.431102 1.187598 1.431102 1.375591) 
+      (net "N$5")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.568898 1.824409 1.568898 1.868898) 
+      (net "N$11")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.568898 1.868898 1.650000 1.950000) 
+      (net "N$11")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.391732 1.824409 1.391732 2.125000) 
+      (net "N$23")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.391732 2.125000 1.550000 2.125000) 
+      (net "N$23")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.550000 2.125000 1.550000 2.250000) 
+      (net "N$23")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.470472 1.824409 1.470472 2.075000) 
+      (net "N$25")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.470472 2.075000 1.700000 2.075000) 
+      (net "N$25")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.700000 2.075000 1.700000 2.450000) 
+      (net "N$25")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.700000 2.450000 1.450000 2.450000) 
+      (net "N$25")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.450000 2.450000 1.450000 2.350000) 
+      (net "N$25")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.450787 1.824409 1.450787 2.100000) 
+      (net "N$26")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.450787 2.100000 1.650000 2.100000) 
+      (net "N$26")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.650000 2.100000 1.650000 2.350000) 
+      (net "N$26")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.650000 2.350000 1.550000 2.350000) 
+      (net "N$26")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.549213 1.824409 1.549213 1.899213) 
+      (net "N$36")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.549213 1.899213 1.650000 2.000000) 
+      (net "N$36")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.529528 1.824409 1.529528 1.929528) 
+      (net "N$38")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.529528 1.929528 1.550000 1.950000) 
+      (net "N$38")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.509843 1.824409 1.509843 1.959843) 
+      (net "N$45")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.509843 1.959843 1.550000 2.000000) 
+      (net "N$45")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.250000 2.350000 1.350000 2.350000) 
+      (net "N$46")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.250000 1.747638 1.250000 2.350000) 
+      (net "N$46")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.275591 1.747638 1.250000 1.747638) 
+      (net "N$46")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.352362 1.824409 1.352362 2.250000) 
+      (net "VCC")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.352362 2.250000 1.350000 2.250000) 
+      (net "VCC")
+    )
+    (wire
+      (path "1#Top" 0.016000 0.912598 1.452362 0.912598 1.525000) 
+      (net "VCC")
+    )
+    (wire
+      (path "1#Top" 0.016000 0.912598 1.452362 1.275591 1.452362) 
+      (net "VCC")
+    )
+    (wire
+      (path "1#Top" 0.016000 0.912598 1.375000 0.912598 1.452362) 
+      (net "VCC")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.500000 1.600000 1.352362 1.747638) 
+      (net "VCC")
+    )
+    (wire
+      (path "1#Top" 0.016000 1.352362 1.747638 1.352362 1.824409) 
+      (net "VCC")
+    )
+  )
+)
