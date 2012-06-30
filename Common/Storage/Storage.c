@@ -16,17 +16,14 @@
 
 #include <Terminal.h>
 
+static FATFS _FatFs;						/* Файловая система */
+static uint8_t StorageInit;					/* Флаг инициализации хранилища */
+static bool StorageDebugMode = false;		/* Флаг отладочного режима */
+
 static void MakeFileName(uint32_t id, char *str);
 
-/* ============================================= */
-// Public API
-/* ============================================= */
 
-static FATFS _FatFs;
-static uint8_t StorageInit;
-static bool StorageDebugMode = false;
-
-// Инициализация хранилища
+/** Инициализация хранилища */
 bool InitStorage(void)
 {
 	FRESULT result;
@@ -111,7 +108,6 @@ bool Open(const uint32_t id, IRCode *result)
 			print("Storage not init\n\r");
 		return false;
 	}
-
 
 	if (!result) {
 		if (StorageDebugMode)

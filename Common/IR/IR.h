@@ -16,7 +16,8 @@
 typedef struct
 {
 	uint32_t ID;
-	uint32_t Flags;
+	uint16_t Flags;
+	uint16_t Crc;
 	uint32_t Frequency;
 	uint32_t IntervalsCount;
 	uint32_t Intervals[INTERVALS_MAX];	// Интрвал - старший бит - значение уровня, остальные - время в мкс

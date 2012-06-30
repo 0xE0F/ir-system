@@ -27,14 +27,13 @@ static const char* Version = "1.0";
 #define _CMD_SHOW_PARAM	"params"
 #define _CMD_SET_CARRIER_FREQ "freq"
 #define _CMD_SET_CHANNEL_VALUE "channel"
-#define _CMD_SET_SD_POWER "sd_power"
 
 
 
-#define _NUM_OF_CMD 9
+#define _NUM_OF_CMD 8
 
 //available  commands
-char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_STATUS, _CMD_STORAGE, _CMD_STORAGE_DEBUG, _CMD_SHOW_PARAM, _CMD_SET_CARRIER_FREQ, _CMD_SET_CHANNEL_VALUE, _CMD_SET_SD_POWER};
+char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_STATUS, _CMD_STORAGE, _CMD_STORAGE_DEBUG, _CMD_SHOW_PARAM, _CMD_SET_CARRIER_FREQ, _CMD_SET_CHANNEL_VALUE};
 // array for comletion
 char * compl_world [_NUM_OF_CMD + 1];
 
@@ -133,15 +132,6 @@ int execute (int argc, const char * const * argv)
 			if (++i < argc) {
 				int res = atoi(argv[i]);
 				SetStorageDebugMode(res);
-			} else {
-				print("Not enough arguments\n\r");
-				return -1;
-			}
-			return 0;
-		} else if ( strcmp(argv[i], _CMD_SET_SD_POWER) == 0 ) {
-			if (++i < argc) {
-				int res = atoi(argv[i]);
-				SetSDPowerMode(res);
 			} else {
 				print("Not enough arguments\n\r");
 				return -1;

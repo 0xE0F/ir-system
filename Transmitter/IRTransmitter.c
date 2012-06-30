@@ -137,7 +137,7 @@ static void InitTimers(void)
 	InitFlags |= WorkTimersInit;
 }
 
-// Установка несущей частоты
+/** Установка несущей частоты */
 void SetCarrierFrequency(const uint32_t value)
 {
 	uint16_t period = 0;
@@ -167,18 +167,12 @@ void TIM7_IRQHandler(void)
 	if (!TransmittingCode)
 		return;
 
-	if (TransmittingTime)
-	{
+	if (TransmittingTime) {
 		SetNextPartOutInterval();
-	}
-	else
-	{
-		if (++TransmittingIndex < TransmittingCode->IntervalsCount)
-		{
+	} else {
+		if (++TransmittingIndex < TransmittingCode->IntervalsCount) {
 			SetOutInterval(TransmittingCode->Intervals[TransmittingIndex]);
-		}
-		else
-		{
+		} else {
 			TIM_Cmd(TIM7, DISABLE);
 			NVIC_DisableIRQ(TIM7_IRQn);
 			Transmitting = 0;
@@ -241,8 +235,7 @@ uint32_t GetFirstNonEmptyIndex(const IRCode *code)
 	if (code->IntervalsCount == 0)
 		return ~0;
 
-	for(size_t i=0; i < code->IntervalsCount; i++)
-	{
+	for(size_t i=0; i < code->IntervalsCount; i++) {
 		if (GetTime(code->Intervals[i]) != 0)
 			return i;
 	}
@@ -258,13 +251,10 @@ static void SetOutInterval(const uint32_t interval)
 
 static void SetNextPartOutInterval(void)
 {
-	if (TransmittingTime > OutTimeoutMax)
-	{
+	if (TransmittingTime > OutTimeoutMax) {
 		TIM7->CNT = 0;
 		TransmittingTime -= OutTimeoutMax;
-	}
-	else
-	{
+	} else {
 		TIM7->CNT = OutTimeoutMax -TransmittingTime;
 		TransmittingTime = 0;
 	}
@@ -272,50 +262,27 @@ static void SetNextPartOutInterval(void)
 
 void SetOutValueToChannel(const uint32_t channelId, const uint8_t value)
 {
-	#warning When will you fix me ?
+	uint16_t pin = 0;
+	switch(channelId)
+	{
+		case 0:
+			pin = CHANNEL_0_PIN_NUMBER;
+			break;
+		case 1:
+			pin = CHANNEL_1_PIN_NUMBER;
+			break;
+		case 2:
+			pin = CHANNEL_2_PIN_NUMBER;
+			break;
+		case 3:
+			pin = CHANNEL_3_PIN_NUMBER;
+			break;
 
-	if (channelId == 0)
-	{
-		if (value)
-		{
-			CHANNELS_PORT->BSRR |= CHANNEL_0_PIN_NUMBER;
-		}
-		else
-		{
-			CHANNELS_PORT->BRR |= CHANNEL_0_PIN_NUMBER;
-		}
 	}
-	if (channelId == 1)
-	{
-		if (value)
-		{
-			CHANNELS_PORT->BSRR |= CHANNEL_1_PIN_NUMBER;
-		}
-		else
-		{
-			CHANNELS_PORT->BRR |= CHANNEL_1_PIN_NUMBER;
-		}
-	}
-	if (channelId == 2)
-	{
-		if (value)
-		{
-			CHANNELS_PORT->BSRR |= CHANNEL_2_PIN_NUMBER;
-		}
-		else
-		{
-			CHANNELS_PORT->BRR |= CHANNEL_2_PIN_NUMBER;
-		}
-	}
-	if (channelId == 3)
-	{
-		if (value)
-		{
-			CHANNELS_PORT->BSRR |= CHANNEL_3_PIN_NUMBER;
-		}
-		else
-		{
-			CHANNELS_PORT->BRR |= CHANNEL_3_PIN_NUMBER;
-		}
+
+	if (value) {
+		CHANNELS_PORT->BSRR |= pin;
+	} else {
+		CHANNELS_PORT->BRR |= pin;
 	}
 }

@@ -21,10 +21,10 @@
 #include <../NetWork/NetWork.h>
 #include "PlcTimers.h"
 
-microrl_t rl;
-microrl_t * prl = &rl;
+microrl_t rl;						 /* Реализация терминала */
+microrl_t * prl = &rl;				 /* */
 static CircularBuffer terminalBuffer; /* Буфер терминала */
-static const unsigned TerminalBufferSize = 16;
+static const unsigned TerminalBufferSize = 16; /* Размер буфера терминала */
 
 static void InitLeds(void);
 static void InitTerminalUART(uint32_t baudrate);
@@ -95,7 +95,7 @@ int main(void) {
 	PowerLedOn();
 	InitTerminal(115200);
 
-	/* Setup SysTick Timer for 1 millisecond interrupts, also enables Systick and Systick-Interrupt */
+	/** Инициализация системного таймера с периодом в 1 мс */
 	if (SysTick_Config(SystemCoreClock / 1000)) {
 		ErrorLedOn();
 		printf("Error init system timer\n\r");
@@ -103,7 +103,7 @@ int main(void) {
 	}
 
 	InitPlcTimers();
-//	InitNetWork(9600, 0x1);
+	InitNetWork(115200, GetJumpersValue(), dtTransmitter);
 
  	SetStorageDebugMode(true);
 	if ( !InitStorage() ) {
@@ -122,14 +122,15 @@ int main(void) {
 			microrl_insert_char (prl, c);
 		}
 
-//		NetWorkProcess();
+		ProcessNetwork();
 		if (IsTimeoutEx(BLINK_TIMER, BLINK_VALUE)) {
 			NetworkLedInv();
 		}
 	}
 }
 
-static void InitTerminalUART(uint32_t baudrate) {
+static void InitTerminalUART(uint32_t baudrate)
+{
 	USART_InitTypeDef USART_InitStructure;
 	RCC_APB2PeriphClockCmd(RCC_APB2ENR_USART1EN, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
@@ -167,7 +168,8 @@ static void InitTerminalUART(uint32_t baudrate) {
 	USART_Cmd(USART1, ENABLE);
 }
 
-static void InitLeds(void) {
+static void InitLeds(void)
+{
 	GPIO_InitTypeDef  GPIO_InitStructure;
 
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
@@ -198,13 +200,17 @@ static void InitLeds(void) {
 	PowerLedOff();
 }
 
-void USART1_IRQHandler(void) {
+/** Прием данных по первому последовательному порту */
+void USART1_IRQHandler(void)
+{
 	uint8_t ch = USART_ReceiveData(USART1);
 	cbWrite(&terminalBuffer, &ch);
 	USART_ClearITPendingBit(USART1, USART_IT_RXNE);
 }
 
-RAMFUNC void SysTick_Handler(void) {
+/** Тик системного таймера дла отрабоки таймаутов дискового ввода вывода*/
+RAMFUNC void SysTick_Handler(void)
+{
 	static uint8_t cntdiskio=0;
 
 	cntdiskio++;
@@ -213,3 +219,10 @@ RAMFUNC void SysTick_Handler(void) {
 		disk_timerproc(); /* to be called every 10ms */
 	}
 }
+
+/** Запрос на сканирование кода */
+void RequestOnScan(uint16_t id, ScanMode mode) { }
+
+/** Запрос на выключение сканирвоания */
+void RequestOffScan(void) { }
+
