@@ -68,6 +68,8 @@ bool Save(IRCode *code)
 	FIL file;
 	FRESULT res;
 	UINT bw;
+	uint16_t crc = 0xFFFF;
+
 	char fName[8 + 1 + 3 + 1] = {'\0'}; // 8 name, + .bin + \0
 
 	if (!StorageInit) {
@@ -75,6 +77,9 @@ bool Save(IRCode *code)
 			print("Storage not init\n\r");
 		return false;
 	}
+
+	crc = GetCrc(code);
+	code->Crc = crc;
 
 	MakeFileName(code->ID, fName);
 	res = f_open(&file, fName, FA_CREATE_ALWAYS | FA_WRITE);
@@ -102,6 +107,7 @@ bool Open(const uint32_t id, IRCode *result)
 	FRESULT res;
 	FIL file;
 	UINT btr = 0;
+	uint16_t crc = 0xFFFF;
 
 	if (!StorageInit) {
 		if (StorageDebugMode)
@@ -136,9 +142,8 @@ bool Open(const uint32_t id, IRCode *result)
 		return false;
 	}
 
-	//TODO: Add check by CRC
-
-	return true;
+	crc = GetCrc(result);
+	return crc == result->Crc;
 }
 
 
@@ -161,25 +166,24 @@ void PrintStorageStatus(void)
 	WORD rWord;
 	BYTE rByte;
 
-	if (disk_ioctl(0, GET_SECTOR_COUNT, &rLong) == RES_OK)
-		{ printf("Drive size: %u sectors\r\n", (unsigned int)rLong); }
-	if (disk_ioctl(0, GET_SECTOR_SIZE, &rWord) == RES_OK)
-		{ printf("Sector size: %u\r\n", rWord); }
-	if (disk_ioctl(0, GET_BLOCK_SIZE, &rLong) == RES_OK)
-		{ printf("Erase block size: %u sectors\r\n", (unsigned int)rLong); }
-	if (disk_ioctl(0, MMC_GET_TYPE, &rByte) == RES_OK)
-		{ printf("MMC/SDC type: %u\r\n", rByte); }
+	if (disk_ioctl(0, GET_SECTOR_COUNT, &rLong) == RES_OK) {
+		printf("Drive size: %u sectors\r\n", (unsigned int)rLong);
+	} if (disk_ioctl(0, GET_SECTOR_SIZE, &rWord) == RES_OK)	{
+		printf("Sector size: %u\r\n", rWord);
+	} if (disk_ioctl(0, GET_BLOCK_SIZE, &rLong) == RES_OK) {
+		printf("Erase block size: %u sectors\r\n", (unsigned int)rLong);
+	} if (disk_ioctl(0, MMC_GET_TYPE, &rByte) == RES_OK) {
+		printf("MMC/SDC type: %u\r\n", rByte);
+	}
 
 	FATFS *fs = &_FatFs;
 	rByte = f_getfree("", (DWORD*)&rLong, &fs);
-	if (!rByte)
-	{
+
+	if (!rByte) {
 		printf("FAT type = %u (%s)\n\rNumber of FATs = %u\n\r",
 				(WORD)_FatFs.fs_type, (_FatFs.fs_type==FS_FAT12) ? "FAT12" : (_FatFs.fs_type==FS_FAT16) ? "FAT16" : "FAT32",
 				(WORD)_FatFs.n_fats);
-	}
-	else
-	{
+	} else {
 		printf("Cannot get more info. Error in getfree: %d\n\r", rByte);
 	}
 }

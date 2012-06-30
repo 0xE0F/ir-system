@@ -6,6 +6,7 @@
 #include <string.h>
 #include <math.h>
 
+#include <Crc.h>
 #include "IR.h"
 
 // Минимально детектируемая частота
@@ -70,8 +71,7 @@ uint8_t GetValue(uint32_t interval) { return (interval & ValueMask) == ValueMask
 // отладчный вывод кода
 void DebugPrint(IRCode *code)
 {
-	if (!code)
-	{
+	if (!code) {
 		return;
 	}
 
@@ -80,16 +80,15 @@ void DebugPrint(IRCode *code)
 	printf("Flags: 0x%04X\n\r", (unsigned short)code->Flags);
 	printf("Count: %u\n\r", (unsigned int)code->IntervalsCount);
 
-	if (code->IntervalsCount > INTERVALS_MAX)
-	{
+	if (code->IntervalsCount > INTERVALS_MAX) {
 		printf("Intervals count out if range\n\r");
 		return;
 	}
 
-	for(uint32_t i=0; i < code->IntervalsCount; i++)
-	{
+	for(uint32_t i=0; i < code->IntervalsCount; i++) {
 		printf("[%03u] %01X -> [%08u us]\n\r", (unsigned int)i, (unsigned char)GetValue(code->Intervals[i]), (unsigned int)GetTime(code->Intervals[i]));
 	}
+
 	printf("\n\r");
 }
 
@@ -108,6 +107,19 @@ bool CheckIRCode(IRCode *code)
 		return false;
 
 	return true;
+}
+
+/** Получение CRC16 для внутренних данных кода */
+uint16_t GetCrc(IRCode *code)
+{
+	uint8_t *pData;		// Указатель на проверяемые данные
+	size_t count = sizeof(uint32_t) * 2 + INTERVALS_MAX * INTERVAL_SIZE;
+
+	if (!code)
+		return 0xFFFF;
+
+	pData = (uint8_t *) &(code->Frequency);
+	return Crc16(pData, count, 0xFFFF);
 }
 
 bool IsEqual(IRCode *left, IRCode *rigth)

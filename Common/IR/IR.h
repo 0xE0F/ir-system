@@ -54,7 +54,11 @@ uint32_t GetTime(uint32_t interval);
 // Получение значения интервала
 uint8_t GetValue(uint32_t interval);
 
-bool CheckIRCode(IRCode *code); /* Проверка на допустимость кода */
+/** Проверка на допустимость кода */
+bool CheckIRCode(IRCode *code);
+
+/** Получение CRC16 для внутренних данных кода */
+uint16_t GetCrc(IRCode *code);
 
 bool IsEqual(IRCode *left, IRCode *rigth); /* Сравнение двух кодов */
 
