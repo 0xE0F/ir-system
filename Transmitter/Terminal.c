@@ -11,6 +11,7 @@
 #include "Terminal.h"
 #include "IRTransmitter.h"
 #include "Storage.h"
+#include "NetWork.h"
 
 extern void PrintChar(const char c);
 extern void RunScan(void);
@@ -138,6 +139,8 @@ int execute (int argc, const char * const * argv)
 			}
 			return 0;
 		} else if (strcmp (argv[i], _CMD_SHOW_PARAM) == 0) {
+			printf("Network address: %u\n\r", (unsigned int) GetDeviceAddress());
+			printf("Device type: %u\n\r", (unsigned int) GetDeviceType());
 			printf("Ir debug mode: %u\n\r", (unsigned int)DebugModeIr);
 			printf("Max length delta: %u\n\r", (unsigned int)LengthDelataMax);
 			printf("Max interval delta: %u\n\r", (unsigned int)IntervalDelataMax);

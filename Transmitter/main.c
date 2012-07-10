@@ -103,7 +103,7 @@ int main(void) {
 	}
 
 	InitPlcTimers();
-	InitNetWork(115200, GetJumpersValue(), dtTransmitter);
+	InitNetWork(9600, pmEven, GetJumpersValue(), dtTransmitter);
 
  	SetStorageDebugMode(true);
 	if ( !InitStorage() ) {
@@ -225,4 +225,31 @@ void RequestOnScan(uint16_t id, ScanMode mode) { }
 
 /** Запрос на выключение сканирвоания */
 void RequestOffScan(void) { }
+
+/* Запрос на отправку кода в канал */
+void RequestSendCode(uint16_t id, uint8_t channel)
+{
+
+}
+
+/* Запрос на сохранение кода в хранилище */
+void RequestSaveCode(uint16_t number, uint32_t id, uint16_t length, uint8_t *buf)
+{
+	if ( buf ) {
+		IRCode *code = (IRCode *) buf;
+		code->ID = id;
+
+		//TODO: Проверка на существование кода
+		if ( Save(code) ) {
+			uint8_t answer[] = {GetDeviceAddress(), cmdSaveCode};
+			Answer(answer, sizeof(answer)/sizeof(answer[0]), NULL, 0, true);
+		} else {
+			AnswerError(errFlash);
+		}
+	} else	{
+		AnswerError(errFlash);
+	}
+
+
+}
 

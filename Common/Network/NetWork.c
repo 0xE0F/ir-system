@@ -19,7 +19,7 @@ static uint8_t DeviceAddress = 0; 							/* Адрес устройства */
 static uint8_t DeviceType;									/* Тип устройства */
 
 static CircularBuffer NetworkBuffer;						/* Буфер данных устройства */
-enum {NetWorkBufferSize = STORAGE_PAGE_SIZE + 64 };
+enum {NetWorkBufferSize = STORAGE_PAGE_SIZE + 1024 };
 //STORAGE_PAGE_SIZE + 1 + 1 + 2 + 2 + 2;			/* Размер буфера кода + заголовок команды (ADDR + CODE + PARAM + CRC16) */
 static uint8_t WorkBuffer[NetWorkBufferSize];				/* Рабочий буфер устройства */
 
@@ -64,7 +64,7 @@ static void SetMode(NetworkState state)
 	USART_Cmd(USART2, ENABLE);
 }
 
-void InitNetWork(uint32_t baudrate, uint8_t address, uint8_t deviceType)
+void InitNetWork(uint32_t baudrate, ParityMode parity, uint8_t address, uint8_t deviceType)
 {
 	USART_InitTypeDef USART_InitStructure;
 	RCC_APB1PeriphClockCmd(RCC_APB1ENR_USART2EN, ENABLE);
@@ -102,8 +102,23 @@ void InitNetWork(uint32_t baudrate, uint8_t address, uint8_t deviceType)
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
-	USART_InitStructure.USART_WordLength = 8;
-	USART_InitStructure.USART_Parity = USART_Parity_No;
+
+	switch(parity) {
+		case pmEven:
+			USART_InitStructure.USART_WordLength =USART_WordLength_9b;
+			USART_InitStructure.USART_Parity = USART_Parity_Even;
+			break;
+
+		case pmOdd:
+			USART_InitStructure.USART_WordLength =USART_WordLength_9b;
+			USART_InitStructure.USART_Parity = USART_Parity_Odd;
+			break;
+
+		case pmNone:
+		default:
+			USART_InitStructure.USART_WordLength =USART_WordLength_8b;
+			USART_InitStructure.USART_Parity = USART_Parity_No;
+	}
 
 	USART_Init(USART2, &USART_InitStructure);
 
@@ -210,9 +225,31 @@ void ProcessNetwork(void)
 					RequestOffScan();
 					break;
 
+				/** a   08   k1  k2  n1   n2   n3   n4   l1   l2   [data]   c1   c2 */
 				case cmdSaveCode:
-					break;
+				{
+					uint16_t number, length;
+					uint32_t id;
+					const size_t dataOffset = 2 + sizeof(uint16_t) + sizeof(uint32_t) + sizeof(uint16_t);
+					const size_t realDataIn = count - dataOffset;
 
+					number =    WorkBuffer[3];
+					number |= ( WorkBuffer[2] << 8 ) & 0xFF00;
+
+					id =    WorkBuffer[7];
+					id |= ( WorkBuffer[6] << 8 ) &  0x0000FF00;
+					id |= ( WorkBuffer[5] << 16 ) & 0x00FF0000;
+					id |= ( WorkBuffer[4] << 24 ) & 0xFF000000;
+
+					length  =   WorkBuffer[9];
+					length |= ( WorkBuffer[8] << 8 ) & 0xFF00;
+
+					if (realDataIn >= length)
+						RequestSaveCode(number, id, length, WorkBuffer + dataOffset);
+					else
+						printf("Excpected %u bytes, but have %u bytes", (unsigned int) length, (unsigned int) realDataIn);
+					break;
+				}
 				case cmdReadCode:
 					break;
 
