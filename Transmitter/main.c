@@ -26,6 +26,8 @@ microrl_t * prl = &rl;				 /* */
 static CircularBuffer terminalBuffer; /* Буфер терминала */
 static const unsigned TerminalBufferSize = 16; /* Размер буфера терминала */
 
+IRCode _IRCode;
+
 static void InitLeds(void);
 static void InitTerminalUART(uint32_t baudrate);
 
@@ -105,7 +107,6 @@ int main(void) {
 	InitPlcTimers();
 	InitNetWork(9600, pmEven, GetJumpersValue(), dtTransmitter);
 
- 	SetStorageDebugMode(true);
 	if ( !InitStorage() ) {
 		while(true) {
 			if (IsTimeoutEx(BLINK_TIMER, BLINK_VALUE)) {
@@ -113,7 +114,6 @@ int main(void) {
 			}
 		}
 	}
- 	SetStorageDebugMode(false);
 
 	while (true) {
 		if ( !cbIsEmpty(&terminalBuffer) ) {
@@ -226,30 +226,50 @@ void RequestOnScan(uint16_t id, ScanMode mode) { }
 /** Запрос на выключение сканирвоания */
 void RequestOffScan(void) { }
 
-/* Запрос на отправку кода в канал */
-void RequestSendCode(uint16_t id, uint8_t channel)
+/** Запрос на сохранение кода в хранилище */
+void RequestSaveCode(uint8_t *buffer, size_t count)
 {
+	if ( buffer ) {
+		uint16_t number = GetUInt16(buffer);
+		uint32_t id = GetUInt32(buffer+2);
+		uint16_t length = GetUInt16(buffer+6);
 
-}
-
-/* Запрос на сохранение кода в хранилище */
-void RequestSaveCode(uint16_t number, uint32_t id, uint16_t length, uint8_t *buf)
-{
-	if ( buf ) {
-		IRCode *code = (IRCode *) buf;
+		//TODO: Добавить проверку длинны
+		IRCode *code = (IRCode *) buffer;
 		code->ID = id;
 
-		//TODO: Проверка на существование кода
+		printf("Saving ir code with number: %u (ID:%u Len:%u) to storage\n\r", (unsigned int) number, (unsigned int) id, (unsigned int)length);
 		if ( Save(code) ) {
 			uint8_t answer[] = {GetDeviceAddress(), cmdSaveCode};
 			Answer(answer, sizeof(answer)/sizeof(answer[0]), NULL, 0, true);
+			printf("Save.\n\r");
 		} else {
+			printf("Error on saving.\n\r");
 			AnswerError(errFlash);
 		}
 	} else	{
-		AnswerError(errFlash);
+		printf("Null pointer reference!\n\r");
 	}
-
-
 }
 
+/** Запрос на отправку кода в канал */
+void RequestSendCode(uint8_t *buffer, size_t count)
+{
+	uint16_t id = GetUInt16(buffer);
+	uint8_t channel = *(buffer + 2);
+	StatusCode result;
+
+	//TODO: Добавить в очередь
+	printf("Reading IR code from storage with ID: %u\n\r", (unsigned int)id);
+	if ( Open(id, &_IRCode) ) {
+		if (CheckIRCode( &_IRCode) ) {
+			printf("Sending IR code with ID: %u to channel: %u\n\r", (unsigned int) id, (unsigned int) channel);
+			result = SendCodeToChannel( &_IRCode, channel);
+			printf("Send status: %u\n\r", (unsigned int)result);
+		} else {
+			printf("IR code not valid\n\r");
+		}
+	} else {
+		printf("IR code not found\n\r");
+	}
+}

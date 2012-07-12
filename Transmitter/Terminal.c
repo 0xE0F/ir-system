@@ -24,17 +24,16 @@ static const char* Version = "1.0";
 #define _CMD_CLEAR	"clear"
 #define _CMD_STATUS  "status"
 #define _CMD_STORAGE  "storage"
-#define _CMD_STORAGE_DEBUG	"storage_debug"
 #define _CMD_SHOW_PARAM	"params"
 #define _CMD_SET_CARRIER_FREQ "freq"
 #define _CMD_SET_CHANNEL_VALUE "channel"
 
 
 
-#define _NUM_OF_CMD 8
+#define _NUM_OF_CMD 7
 
 //available  commands
-char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_STATUS, _CMD_STORAGE, _CMD_STORAGE_DEBUG, _CMD_SHOW_PARAM, _CMD_SET_CARRIER_FREQ, _CMD_SET_CHANNEL_VALUE};
+char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_STATUS, _CMD_STORAGE, _CMD_SHOW_PARAM, _CMD_SET_CARRIER_FREQ, _CMD_SET_CHANNEL_VALUE};
 // array for comletion
 char * compl_world [_NUM_OF_CMD + 1];
 
@@ -129,15 +128,6 @@ int execute (int argc, const char * const * argv)
 			print("Not enough arguments\n\r");
 			return -1;
 
-		} else if (strcmp (argv[i], _CMD_STORAGE_DEBUG) == 0) {
-			if (++i < argc) {
-				int res = atoi(argv[i]);
-				SetStorageDebugMode(res);
-			} else {
-				print("Not enough arguments\n\r");
-				return -1;
-			}
-			return 0;
 		} else if (strcmp (argv[i], _CMD_SHOW_PARAM) == 0) {
 			printf("Network address: %u\n\r", (unsigned int) GetDeviceAddress());
 			printf("Device type: %u\n\r", (unsigned int) GetDeviceType());

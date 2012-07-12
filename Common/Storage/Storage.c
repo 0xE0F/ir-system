@@ -18,7 +18,6 @@
 
 static FATFS _FatFs;						/* Файловая система */
 static uint8_t StorageInit;					/* Флаг инициализации хранилища */
-static bool StorageDebugMode = false;		/* Флаг отладочного режима */
 
 static void MakeFileName(uint32_t id, char *str);
 
@@ -28,20 +27,17 @@ bool InitStorage(void)
 {
 	FRESULT result;
 	StorageInit = 0;
-
+	printf("Initialazing storage...");
 	WORD status = (WORD)disk_initialize(0);
 	if (status) {
-		if (StorageDebugMode) {
-			printf("Initialazing storage...");
-			if (status == STA_NODISK) {
-				print("no disk\n\r");
-			}
-			if (status == STA_NOINIT) {
-				print("interal error\n\r");
-			}
-			if (status == STA_PROTECT) {
-				print("write protect\n\r");
-			}
+		if (status == STA_NODISK) {
+			print("no disk\n\r");
+		}
+		if (status == STA_NOINIT) {
+			print("interal error\n\r");
+		}
+		if (status == STA_PROTECT) {
+			print("write protect\n\r");
 		}
 
 		return false;
@@ -49,16 +45,12 @@ bool InitStorage(void)
 
 	result = f_mount(0, &_FatFs);
 	if (result != FR_OK) {
-		if (StorageDebugMode) {
-			print("unable to mount fs\n\r");
-		}
+		print("Unable to mount fs\n\r");
 		return false;
 	}
 
 	StorageInit = 1;
-	if (StorageDebugMode) {
-		print("ok\n\r");
-	}
+	print("done\n\r");
 	return true;
 }
 
@@ -73,8 +65,7 @@ bool Save(IRCode *code)
 	char fName[8 + 1 + 3 + 1] = {'\0'}; // 8 name, + .bin + \0
 
 	if (!StorageInit) {
-		if (StorageDebugMode)
-			print("Storage not init\n\r");
+		print("Storage not init\n\r");
 		return false;
 	}
 
@@ -84,15 +75,13 @@ bool Save(IRCode *code)
 	MakeFileName(code->ID, fName);
 	res = f_open(&file, fName, FA_CREATE_ALWAYS | FA_WRITE);
 	if (res) {
-		if (StorageDebugMode)
-			printf("Create file error: %d\n\r", res);
+		printf("Create file error: %d\n\r", res);
 		return false;
 	}
 
 	res = f_write(&file, code, sizeof(IRCode), &bw);
 	if (res || bw != sizeof(IRCode)) {
-		if (StorageDebugMode)
-			printf("Write file error: %d, bytes to write: %d\n\r", res, bw);
+		printf("Write file error: %d, bytes to write: %d\n\r", res, bw);
 		return false;
 	}
 
@@ -110,35 +99,30 @@ bool Open(const uint32_t id, IRCode *result)
 	uint16_t crc = 0xFFFF;
 
 	if (!StorageInit) {
-		if (StorageDebugMode)
-			print("Storage not init\n\r");
+		print("Storage not init\n\r");
 		return false;
 	}
 
 	if (!result) {
-		if (StorageDebugMode)
-			print("Null pointer reference\n\r");
+		print("Null pointer reference\n\r");
 		return false;
 	}
 
 	MakeFileName(id, fName);
 	res = f_open(&file, fName, FA_OPEN_EXISTING | FA_READ);
 	if (res) {
-		if (StorageDebugMode)
-			printf("Error open file: %s, res: %d\n\r", fName, res);
+		printf("Error open file: %s, res: %d\n\r", fName, res);
 		return false;
 	}
 
 	res = f_read(&file, result, sizeof(IRCode), &btr);
 	if (res || btr != sizeof(IRCode)) {
-		if (StorageDebugMode)
-			printf("Error reading file: %d, bytes to read: %d\n\r", res, btr);
+		printf("Error reading file: %d, bytes to read: %d\n\r", res, btr);
 		return false;
 	}
 
 	if (id != result->ID) {
-		if (StorageDebugMode)
-			printf("Excpected ID: %u, but was : %u\n\r", (unsigned int)id, (unsigned int)result->ID);
+		printf("Excpected ID: %u, but was : %u\n\r", (unsigned int)id, (unsigned int)result->ID);
 		return false;
 	}
 
@@ -234,9 +218,3 @@ void PrintConentStorage(void)
 	char path[259] = {"0:"};
 	scan_files(path);
 }
-
-/* Вклчюение отладочного режима хранилища */
-void SetStorageDebugMode(bool mode) {
-	StorageDebugMode = mode;
-}
-

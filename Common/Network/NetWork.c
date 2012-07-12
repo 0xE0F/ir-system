@@ -228,32 +228,14 @@ void ProcessNetwork(void)
 				/** a   08   k1  k2  n1   n2   n3   n4   l1   l2   [data]   c1   c2 */
 				case cmdSaveCode:
 				{
-					uint16_t number, length;
-					uint32_t id;
-					const size_t dataOffset = 2 + sizeof(uint16_t) + sizeof(uint32_t) + sizeof(uint16_t);
-					const size_t realDataIn = count - dataOffset;
-
-					number =    WorkBuffer[3];
-					number |= ( WorkBuffer[2] << 8 ) & 0xFF00;
-
-					id =    WorkBuffer[7];
-					id |= ( WorkBuffer[6] << 8 ) &  0x0000FF00;
-					id |= ( WorkBuffer[5] << 16 ) & 0x00FF0000;
-					id |= ( WorkBuffer[4] << 24 ) & 0xFF000000;
-
-					length  =   WorkBuffer[9];
-					length |= ( WorkBuffer[8] << 8 ) & 0xFF00;
-
-					if (realDataIn >= length)
-						RequestSaveCode(number, id, length, WorkBuffer + dataOffset);
-					else
-						printf("Excpected %u bytes, but have %u bytes", (unsigned int) length, (unsigned int) realDataIn);
+					RequestSaveCode(WorkBuffer + 2, count);
 					break;
 				}
 				case cmdReadCode:
 					break;
 
 				case cmdSendCode:
+					RequestSendCode(WorkBuffer + 2, count);
 					break;
 
 				case cmdDeleteCode:
@@ -330,6 +312,23 @@ bool AnswerError(Errors error)
 {
 	uint8_t errorHeader[] = {GetDeviceAddress(), cmdError, error};
 	return Answer(errorHeader, sizeof(errorHeader) / sizeof(errorHeader[0]), NULL, 0, true);
+}
+
+/** Чтение типов из буфера */
+uint16_t GetUInt16(uint8_t *buf)
+{
+	uint16_t value = *buf;
+	return value | ( ( *(buf + 1) << 8 ) & 0xFF00 );
+}
+
+uint16_t GetUInt32(uint8_t *buf)
+{
+	uint32_t value = *buf;
+	value |= ( *(buf + 1) << 8 ) & 0x0000FF00;
+	value |= ( *(buf + 2) << 16 ) & 0x00FF0000;
+
+	return value | ( ( *(buf + 3) << 24 ) & 0xFF000000 );
+
 }
 
 

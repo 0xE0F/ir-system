@@ -56,7 +56,7 @@ bool AnswerError(Errors error);
 void RequestDeviceType(void); /* Запрос типа устройства */
 void RequestOnScan(uint16_t id, ScanMode mode); /* Запрос на сканирование кода */
 void RequestOffScan(void);		/* Запрос на выключение сканирвоания */
-void RequestSendCode(uint16_t id, uint8_t channel);		/* Запрос на отправку кода в канал */
+void RequestSendCode(uint8_t *buffer, size_t count);		/* Запрос на отправку кода в канал */
 
 /** Записать (добавить) ИК-код в хранилище
 a   08   k1  k2  n1   n2   n3   n4   l1   l2   [data]   c1   c2
@@ -69,10 +69,14 @@ a   08   k1  k2  n1   n2   n3   n4   l1   l2   [data]   c1   c2
 	c1   c2  -  контрольная сумма, CRC16. Вычисляется по всей длине команды.
 	В случае если команда уже присутствует в хранилище, в ответ отправляется сообщение об ошибке, см. п.5, код 6.
 */
-void RequestSaveCode(uint16_t number, uint32_t id, uint16_t length, uint8_t *buf);
+void RequestSaveCode(uint8_t *buffer, size_t count);
 void RequestReadCode(void);			/* Запрос на чтение коад из хранилища */
 void RequestDeleteCode(void);		/* Запрос на удаление кода из хранилища */
 void RequestDelateAllCodes(void);	/* Запрос на удаление всех кодов в хранилище */
+
+/** Чтение типов из буфера */
+uint16_t GetUInt16(uint8_t *buf);
+uint16_t GetUInt32(uint8_t *buf);
 
 extern void NetworkLedOn(void);
 extern void NetworkLedOff(void);
