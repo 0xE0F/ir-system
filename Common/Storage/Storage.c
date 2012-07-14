@@ -19,7 +19,7 @@
 static FATFS _FatFs;						/* Файловая система */
 static uint8_t StorageInit;					/* Флаг инициализации хранилища */
 
-static void MakeFileName(uint32_t id, char *str);
+static void MakeFileName(uint32_t number, char *str);
 
 
 /** Инициализация хранилища */
@@ -55,7 +55,7 @@ bool InitStorage(void)
 }
 
 // Сохранение кода в хранилище
-bool Save(IRCode *code)
+bool Save(IRCode *code, const uint16_t number)
 {
 	FIL file;
 	FRESULT res;
@@ -72,25 +72,27 @@ bool Save(IRCode *code)
 	crc = GetCrc(code);
 	code->Crc = crc;
 
-	MakeFileName(code->ID, fName);
+	MakeFileName(number, fName);
 	res = f_open(&file, fName, FA_CREATE_ALWAYS | FA_WRITE);
+	f_sync(&file);
 	if (res) {
 		printf("Create file error: %d\n\r", res);
 		return false;
 	}
 
 	res = f_write(&file, code, sizeof(IRCode), &bw);
+	f_sync(&file);
 	if (res || bw != sizeof(IRCode)) {
 		printf("Write file error: %d, bytes to write: %d\n\r", res, bw);
 		return false;
 	}
+	f_close(&file);
 
-	f_sync(&file);
 	return true;
 }
 
 // Чтение из хранилища
-bool Open(const uint32_t id, IRCode *result)
+bool Open(IRCode *code, const uint16_t number)
 {
 	char fName[8 + 1 + 3 + 1] = {'\0'}; // 8 name, + .bin + \0
 	FRESULT res;
@@ -103,40 +105,41 @@ bool Open(const uint32_t id, IRCode *result)
 		return false;
 	}
 
-	if (!result) {
+	if (!code) {
 		print("Null pointer reference\n\r");
 		return false;
 	}
 
-	MakeFileName(id, fName);
+	MakeFileName(number, fName);
 	res = f_open(&file, fName, FA_OPEN_EXISTING | FA_READ);
+//	f_sync(&file);
+
 	if (res) {
 		printf("Error open file: %s, res: %d\n\r", fName, res);
 		return false;
 	}
 
-	res = f_read(&file, result, sizeof(IRCode), &btr);
+	res = f_read(&file, code, sizeof(IRCode), &btr);
+//	f_sync(&file);
+
 	if (res || btr != sizeof(IRCode)) {
 		printf("Error reading file: %d, bytes to read: %d\n\r", res, btr);
 		return false;
 	}
 
-	if (id != result->ID) {
-		printf("Excpected ID: %u, but was : %u\n\r", (unsigned int)id, (unsigned int)result->ID);
-		return false;
-	}
+	f_close(&file);
 
-	crc = GetCrc(result);
-	return crc == result->Crc;
+	crc = GetCrc(code);
+	return crc == code->Crc;
 }
 
 
-static void MakeFileName(uint32_t id, char *str)
+static void MakeFileName(uint32_t number, char *str)
 {
 	if (!str)
 		return ;
 
-	sprintf(str, "%08X.bin", (unsigned int)id);
+	sprintf(str, "%08X.bin", (unsigned int)number);
 }
 
 /* ============================================= */
@@ -172,7 +175,11 @@ void PrintStorageStatus(void)
 	}
 }
 
-static FRESULT scan_files ( char* path)
+/** Тип функции обратного вызова при перечеслении файлов */
+typedef void (*action_on_enum_t) (char *path, char *fname);
+
+/** Пеерчисление файлов */
+static FRESULT EnumerateFiles ( char* path, action_on_enum_t func)
 {
     FRESULT res;
     FILINFO fno;
@@ -200,11 +207,12 @@ static FRESULT scan_files ( char* path)
 #endif
             if (fno.fattrib & AM_DIR) {                    /* It is a directory */
                 sprintf(&path[i], "/%s", fn);
-                res = scan_files(path);
+                res = EnumerateFiles(path, func);
                 if (res != FR_OK) break;
                 path[i] = 0;
             } else {                                       /* It is a file. */
-                printf("%s/%s\n\r", path, fn);
+                if (func)
+                	func(path, fn);
             }
         }
     }
@@ -212,9 +220,51 @@ static FRESULT scan_files ( char* path)
     return res;
 }
 
+/** */
+static void PrintCallBack(char *path, char *fname)
+{
+	printf("%s/%s\n\r", path, fname);
+}
+
+/** Функция обратного вызова при очистке */
+static void EraseCallBack(char *path, char *fname)
+{
+	FIL file;
+	FRESULT res;
+	char fullName[259] = {'\0'};
+	size_t len = strlen(path) + strlen(fname);
+
+	if (len > ( sizeof(fullName) / sizeof(fullName[0])) )
+		return;
+
+	sprintf(fullName, "%s/%s", path, fname);
+	res = f_open(&file, fullName, FA_OPEN_EXISTING | FA_WRITE);
+	f_sync(&file);
+
+	if (res) {
+		printf("Error open file: %s, res: %d\n\r", fullName, res);
+		return;
+	}
+
+	res = f_truncate(&file);
+	if (res != FR_OK) {
+		printf("Error truncate file: %s, res: %d\n\r", fullName, res);
+	}
+	f_sync(&file);
+	f_close(&file);
+
+}
+
 // Отображение содержимого хранилища
 void PrintConentStorage(void)
 {
 	char path[259] = {"0:"};
-	scan_files(path);
+	EnumerateFiles(path, PrintCallBack);
+}
+
+/** Очистка хранилища */
+void EraseStorage(void)
+{
+	char path[259] = {"0:"};
+	EnumerateFiles(path, EraseCallBack);
 }

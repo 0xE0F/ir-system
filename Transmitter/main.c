@@ -235,11 +235,11 @@ void RequestSaveCode(uint8_t *buffer, size_t count)
 		uint16_t length = GetUInt16(buffer+6);
 
 		//TODO: Добавить проверку длинны
-		IRCode *code = (IRCode *) buffer;
+		IRCode *code = (IRCode *) (buffer + sizeof (uint16_t) + sizeof(uint16_t) + sizeof(uint32_t));
 		code->ID = id;
 
 		printf("Saving ir code with number: %u (ID:%u Len:%u) to storage\n\r", (unsigned int) number, (unsigned int) id, (unsigned int)length);
-		if ( Save(code) ) {
+		if ( Save(code, number) ) {
 			uint8_t answer[] = {GetDeviceAddress(), cmdSaveCode};
 			Answer(answer, sizeof(answer)/sizeof(answer[0]), NULL, 0, true);
 			printf("Save.\n\r");
@@ -255,16 +255,16 @@ void RequestSaveCode(uint8_t *buffer, size_t count)
 /** Запрос на отправку кода в канал */
 void RequestSendCode(uint8_t *buffer, size_t count)
 {
-	uint16_t id = GetUInt16(buffer);
+	uint16_t number = GetUInt16(buffer);
 	uint8_t channel = *(buffer + 2);
 	StatusCode result;
 
 	//TODO: Добавить в очередь
-	printf("Reading IR code from storage with ID: %u\n\r", (unsigned int)id);
-	if ( Open(id, &_IRCode) ) {
-		if (CheckIRCode( &_IRCode) ) {
-			printf("Sending IR code with ID: %u to channel: %u\n\r", (unsigned int) id, (unsigned int) channel);
-			result = SendCodeToChannel( &_IRCode, channel);
+	printf("Reading IR code from storage with ID: %u\n\r", (unsigned int)number);
+	if ( Open(&_IRCode, number) ) {
+		if (CheckIRCode( &_IRCode ) ) {
+			printf("Sending IR code with ID: %u to channel: %u\n\r", (unsigned int) number, (unsigned int) channel);
+			result = SendCodeToChannel( &_IRCode, channel );
 			printf("Send status: %u\n\r", (unsigned int)result);
 		} else {
 			printf("IR code not valid\n\r");
@@ -273,3 +273,10 @@ void RequestSendCode(uint8_t *buffer, size_t count)
 		printf("IR code not found\n\r");
 	}
 }
+
+/* Запрос на удаление всех кодов в хранилище */
+void RequestDelateAllCodes(uint8_t *buffer, size_t count)
+{
+	EraseStorage();
+}
+

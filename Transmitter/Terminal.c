@@ -22,6 +22,7 @@ static const char* Version = "1.0";
 
 #define _CMD_HELP	"help"
 #define _CMD_CLEAR	"clear"
+#define _CMD_ERASE  "erase"
 #define _CMD_STATUS  "status"
 #define _CMD_STORAGE  "storage"
 #define _CMD_SHOW_PARAM	"params"
@@ -30,10 +31,10 @@ static const char* Version = "1.0";
 
 
 
-#define _NUM_OF_CMD 7
+#define _NUM_OF_CMD 8
 
 //available  commands
-char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_STATUS, _CMD_STORAGE, _CMD_SHOW_PARAM, _CMD_SET_CARRIER_FREQ, _CMD_SET_CHANNEL_VALUE};
+char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_STATUS, _CMD_STORAGE, _CMD_SHOW_PARAM, _CMD_SET_CARRIER_FREQ, _CMD_SET_CHANNEL_VALUE, _CMD_ERASE};
 // array for comletion
 char * compl_world [_NUM_OF_CMD + 1];
 
@@ -90,6 +91,9 @@ int execute (int argc, const char * const * argv)
 			return 0;
 		} else if (strcmp (argv[i], _CMD_STORAGE) == 0) {
 			PrintConentStorage();
+			return 0;
+		} else if (strcmp (argv[i], _CMD_ERASE) == 0) {
+			EraseStorage();
 			return 0;
 		} else if ( strcmp(argv[i], _CMD_SET_CARRIER_FREQ) == 0 ){
 

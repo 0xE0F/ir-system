@@ -72,7 +72,7 @@ a   08   k1  k2  n1   n2   n3   n4   l1   l2   [data]   c1   c2
 void RequestSaveCode(uint8_t *buffer, size_t count);
 void RequestReadCode(void);			/* Запрос на чтение коад из хранилища */
 void RequestDeleteCode(void);		/* Запрос на удаление кода из хранилища */
-void RequestDelateAllCodes(void);	/* Запрос на удаление всех кодов в хранилище */
+void RequestDelateAllCodes(uint8_t *buffer, size_t count);	/* Запрос на удаление всех кодов в хранилище */
 
 /** Чтение типов из буфера */
 uint16_t GetUInt16(uint8_t *buf);

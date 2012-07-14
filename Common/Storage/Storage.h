@@ -5,10 +5,13 @@
 bool InitStorage(void);
 
 /* Сохранение кода в хранилище */
-bool Save(IRCode *code);
+bool Save(IRCode *code, const uint16_t number);
 
 /* Чтение из хранилища */
-bool Open(const uint32_t id, IRCode *result);
+bool Open(IRCode *code, const uint16_t number);
+
+/** Очистить хранилище */
+void EraseStorage(void);
 
 /* ============================================= */
 // Debug fucntions
