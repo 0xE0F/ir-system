@@ -14,6 +14,7 @@
 #include "IRTransmitter.h"
 
 #include "RingBuffer.h"
+#include "IrQueue.h"
 
 #include <Storage/ffconf.h>
 #include <Storage/ff.h>
@@ -27,12 +28,19 @@ microrl_t * prl = &rl;				 /* */
 static CircularBuffer terminalBuffer; /* Буфер терминала */
 static const unsigned TerminalBufferSize = 16; /* Размер буфера терминала */
 
-uint32_t TimeoutSndPackets = 0.025 / PLC_TIMER_PERIOD;		/** ТАймаут между отправкой пакетов с кодами */
+/* Очередь для кодов */
+static IrQueue irQueue;
+static const size_t IrQueueSize  = 32;
 
-IRCode _IRCode;
+uint32_t TimeoutSndPackets = 0.025 / PLC_TIMER_PERIOD;		/** ТАймаут между отправкой пакетов с кодами */
+uint32_t TimeoutSndIrCodes = 0.300 / PLC_TIMER_PERIOD;		/** Таймаут отправки ИК кодов */
+
+IRCode WorkingIrCode;
+static IRCode NetworkIrCode;
 
 static void InitLeds(void);
 static void InitTerminalUART(uint32_t baudrate);
+static void IrProcess(void);
 
 #define ERROR_LED_PORT GPIOC
 #define TRANSMITT_LED_PORT GPIOD
@@ -108,6 +116,8 @@ int main(void)
 		while (true);
 	}
 
+	IrQueueInit(&irQueue, IrQueueSize);
+
 	InitPlcTimers();
 	InitNetWork(9600, pmEven, GetJumpersValue(), dtTransmitter);
 
@@ -127,6 +137,8 @@ int main(void)
 		}
 
 		ProcessNetwork();
+		IrProcess();
+
 		if (IsTimeoutEx(BLINK_TIMER, BLINK_VALUE)) {
 			NetworkLedInv();
 		}
@@ -224,6 +236,53 @@ RAMFUNC void SysTick_Handler(void)
 	}
 }
 
+static void IrProcess(void)
+{
+	static bool waitTimeout = false;
+
+	if ( waitTimeout )
+	{
+		if ( IsIrTransmitting() ) {
+			return;
+		}
+		else {
+			waitTimeout = false;
+			SetTimerValue(IR_SND_TIMER, TimeoutSndIrCodes);
+		}
+	}
+
+	if ( !IsTimeout(IR_SND_TIMER) )
+		return;
+
+	if ( !IrQueueIsEmpty(&irQueue) )
+	{
+		ElemType element;
+		IrQueueRead(&irQueue, &element);
+
+		printf("Trying to open code [%u]...", (unsigned int) element.Number);
+		if ( Open(&WorkingIrCode, element.Number) ) {
+
+			print("done\n\rChecking code...");
+			if ( !CheckIRCode(&WorkingIrCode) ) {
+				print("fail\n\r");
+				return;
+			}
+
+			printf("done\n\rTrying to send code at channel [%u]...", (unsigned int) element.Channel);
+			StatusCode res = SendCodeToChannel(&WorkingIrCode, element.Channel);
+
+			if (res) {
+				printf("fail. Error code: %u\n\r", res);
+			} else {
+				print("done\n\r");
+			}
+		}
+
+		waitTimeout = true;
+	}
+
+}
+
 /** Запрос на сканирование кода */
 void RequestOnScan(uint16_t id, ScanMode mode) { }
 
@@ -271,20 +330,31 @@ void RequestSendCode(uint8_t *buffer, size_t count)
 {
 	uint16_t number = GetUInt16(buffer);
 	uint8_t channel = *(buffer + 2);
-	StatusCode result;
+	bool result = false;
 
-	//TODO: Добавить в очередь
-	printf("Reading IR code from storage with ID: %u\n\r", (unsigned int)number);
-	if ( Open(&_IRCode, number) ) {
-		if (CheckIRCode( &_IRCode ) ) {
-			printf("Sending IR code with ID: %u to channel: %u\n\r", (unsigned int) number, (unsigned int) channel);
-			result = SendCodeToChannel( &_IRCode, channel );
-			printf("Send status: %u\n\r", (unsigned int)result);
+	printf("Request to send code with number: %u to channel: %u\n\rChecking ...", (unsigned int)number, (unsigned int) channel);
+	if ( Open(&NetworkIrCode, number) ) {
+		if (CheckIRCode( &NetworkIrCode ) && (channel < MaxChannelNumber ) && ( !IrQueueIsFull(&irQueue) )) {
+
+			ElemType element;
+			element.Number = number;
+			element.Channel = channel;
+			IrQueueWrite(&irQueue, &element);
+
+			result = true;
+			printf("added to queue\n\r");
 		} else {
-			printf("IR code not valid\n\r");
+			printf("fail. Code or channel not valid or queue is full\n\r");
 		}
 	} else {
-		printf("IR code not found\n\r");
+		printf("fail. IR code not found\n\r");
+	}
+
+	if (result) {
+		uint8_t header[] = {GetDeviceAddress(), cmdSendCode};
+		Answer(header, sizeof(header) / sizeof(header[0]), NULL, 0, true);
+	} else {
+		AnswerError(errNotFound);
 	}
 }
 
@@ -294,11 +364,10 @@ void RequestDelateAllCodes(uint8_t *buffer, size_t count)
 	EraseStorage();
 }
 
-static IRCode tmpCode;
 static size_t MaxFileNameLen = 8 + 3 + 1;
 static size_t MaxPathLength = 3; /* Ограничиваем отправку только из корневого каталога */
 
-void OnSendCode(char *path, char *fname)
+void OnSendCodeToHost(char *path, char *fname)
 {
 	uint16_t number = 0;
 
@@ -319,14 +388,14 @@ void OnSendCode(char *path, char *fname)
 
 	number = strtol(fname, NULL, 16);
 
-	printf("Trying send IR code number: %u [%s\%s] ... [%u]", number, path, fname, sizeof(tmpCode));
-	if ( Open( &tmpCode, number ) )
+	printf("Trying send IR code number: %u [%s\%s] ... [%u]", number, path, fname, sizeof(NetworkIrCode));
+	if ( Open( &NetworkIrCode, number ) )
 	{
 		uint8_t header[] = {GetDeviceAddress(), cmdReadCodes, 0, 0, 0, 0, 0, 0, 0, 0};
 		StoreUInt16(header + 2, number);
-		StoreUInt32(header + 4, tmpCode.ID);
-		StoreUInt16(header + 8, sizeof(tmpCode));
-		Answer(header, sizeof(header) / sizeof(header[0]), (uint8_t *)(&tmpCode), sizeof(tmpCode), true);
+		StoreUInt32(header + 4, NetworkIrCode.ID);
+		StoreUInt16(header + 8, sizeof(NetworkIrCode));
+		Answer(header, sizeof(header) / sizeof(header[0]), (uint8_t *)(&NetworkIrCode), sizeof(NetworkIrCode), true);
 		printf(" done\n\r");
 	} else {
 		printf("error\n\r");
@@ -337,5 +406,5 @@ void OnSendCode(char *path, char *fname)
 void RequestReadCodes(uint8_t *buffer, size_t count)
 {
 	char path[300] = {"0:"};
-	EnumerateFiles(path, OnSendCode);
+	EnumerateFiles(path, OnSendCodeToHost);
 }

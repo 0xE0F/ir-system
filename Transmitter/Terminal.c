@@ -20,6 +20,7 @@
 extern void PrintChar(const char c);
 extern void RunScan(void);
 extern uint32_t TimeoutSndPackets;
+extern uint32_t TimeoutSndIrCodes;
 
 static const char* Version = "1.0";
 
@@ -31,16 +32,18 @@ static const char* Version = "1.0";
 #define _CMD_STATUS  "status"
 #define _CMD_STORAGE  "storage"
 #define _CMD_SHOW_PARAM	"params"
-#define _CMD_SET_SND_TMT	"snd_timeout"
+#define _CMD_SET_SND_TMT	"host_snd_timeout"
+#define _CMD_SET_IR_SND_TMT	"ir_snd_timeout"
+
 #define _CMD_SET_CARRIER_FREQ "freq"
 #define _CMD_SET_CHANNEL_VALUE "channel"
 
 
 
-#define _NUM_OF_CMD 9
+#define _NUM_OF_CMD 10
 
 //available  commands
-char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_STATUS, _CMD_STORAGE, _CMD_SHOW_PARAM, _CMD_SET_CARRIER_FREQ, _CMD_SET_CHANNEL_VALUE, _CMD_ERASE, _CMD_SET_SND_TMT};
+char * keyworld [] = {_CMD_HELP, _CMD_CLEAR, _CMD_STATUS, _CMD_STORAGE, _CMD_SHOW_PARAM, _CMD_SET_CARRIER_FREQ, _CMD_SET_CHANNEL_VALUE, _CMD_ERASE, _CMD_SET_SND_TMT, _CMD_SET_IR_SND_TMT};
 // array for comletion
 char * compl_world [_NUM_OF_CMD + 1];
 
@@ -71,7 +74,8 @@ void print_help (void) {
 	print ("\tstorage_debug [0,1] - on or off debug storage operations\n\r");
 	print ("\tfreq <f> - set carrier frequency\n\r");
 	print ("\tchannel [0..3] [0,1] - set channel value\n\r");
-	print ("\tsnd_timeout value (in s) - set snd timeout between packets\n\r");
+	print ("\thost_snd_timeout value (in s) - set snd timeout between packets to host\n\r");
+	print ("\tir_snd_timeout value (in s) - set snd timeout between send ir codes\n\r");
 }
 
 
@@ -124,6 +128,17 @@ int execute (int argc, const char * const * argv)
 
 			return 0;
 
+		} else if ( strcmp(argv[i], _CMD_SET_IR_SND_TMT) == 0 ){
+
+			if ( ++i < argc) {
+				TimeoutSndIrCodes = atof(argv[i]) / PLC_TIMER_PERIOD;
+			} else {
+				print("Not enough arguments\n\r");
+				return -1;
+			}
+
+			return 0;
+
 		} else if ( strcmp(argv[i], _CMD_SET_CHANNEL_VALUE) == 0 ) {
 
 			if (++i < argc) {
@@ -156,7 +171,8 @@ int execute (int argc, const char * const * argv)
 			printf("Ir debug mode: %u\n\r", (unsigned int)DebugModeIr);
 			printf("Max length delta: %u\n\r", (unsigned int)LengthDelataMax);
 			printf("Max interval delta: %u\n\r", (unsigned int)IntervalDelataMax);
-			printf("Snd timeout (in plc resolution): %u\n\r", (unsigned int) TimeoutSndPackets);
+			printf("Host snd timeout (in plc resolution): %u\n\r", (unsigned int) TimeoutSndPackets);
+			printf("Ir snd timeout (in plc resolution): %u\n\r", (unsigned int) TimeoutSndIrCodes);
 			return 0;
 		} else {
 			print ("command: '");

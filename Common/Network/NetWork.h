@@ -19,7 +19,7 @@
 
 
 enum { dtScaner = 0x02, dtTransmitter = 0x01 }; /* Типы устройств */
-typedef enum { errNotEqual = 1, errBusy = 2, errFlash = 5 } Errors;
+typedef enum { errNotFound = 0, errNotEqual = 1, errBusy = 2, errFlash = 5 } Errors;
 enum { cmdDeviceType = 0x0F, cmdOnScan = 0x01, cmdOffScan = 0x02,  cmdSendCode = 0x03, cmdDeleteCode = 0x04, cmdDeleteAll = 0x05, cmdReadCodes = 0x07, cmdSaveCode = 0x08, cmdError = 0x0A};
 
 /* Параметры хранилища - только передачи или передача и хранение */
