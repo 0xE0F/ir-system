@@ -5,6 +5,7 @@
 #include <stm32f10x_usart.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <../Microrl/microrl.h>
@@ -25,6 +26,8 @@ microrl_t rl;						 /* Реализация терминала */
 microrl_t * prl = &rl;				 /* */
 static CircularBuffer terminalBuffer; /* Буфер терминала */
 static const unsigned TerminalBufferSize = 16; /* Размер буфера терминала */
+
+uint32_t TimeoutSndPackets = 0.025 / PLC_TIMER_PERIOD;		/** ТАймаут между отправкой пакетов с кодами */
 
 IRCode _IRCode;
 
@@ -90,7 +93,8 @@ size_t GetJumpersValue(void) {
 	return value;
 }
 
-int main(void) {
+int main(void)
+{
  	for (size_t i = 0; i < SystemCoreClock/100; i++);
 
  	InitLeds();
@@ -226,7 +230,17 @@ void RequestOnScan(uint16_t id, ScanMode mode) { }
 /** Запрос на выключение сканирвоания */
 void RequestOffScan(void) { }
 
-/** Запрос на сохранение кода в хранилище */
+/** Записать (добавить) ИК-код в хранилище
+a   08   k1  k2  n1   n2   n3   n4   l1   l2   [data]   c1   c2
+	a  -  адрес устройства;
+	08  - команда передачи ИК-кода в хранилище;
+	k1   k2  -  порядковый номер ИК-кода, начинается с 0;
+	n1   n2   n3   n4  -  идентификатор команды для мастер-хоста;
+	l1   l2  - длина ИК-кода;
+	[data]  - массив данных размером указанным выше размером;
+	c1   c2  -  контрольная сумма, CRC16. Вычисляется по всей длине команды.
+	В случае если команда уже присутствует в хранилище, в ответ отправляется сообщение об ошибке, см. п.5, код 6.
+*//** Запрос на сохранение кода в хранилище */
 void RequestSaveCode(uint8_t *buffer, size_t count)
 {
 	if ( buffer ) {
@@ -280,3 +294,48 @@ void RequestDelateAllCodes(uint8_t *buffer, size_t count)
 	EraseStorage();
 }
 
+static IRCode tmpCode;
+static size_t MaxFileNameLen = 8 + 3 + 1;
+static size_t MaxPathLength = 3; /* Ограничиваем отправку только из корневого каталога */
+
+void OnSendCode(char *path, char *fname)
+{
+	uint16_t number = 0;
+
+	if (strlen(path) > MaxPathLength)
+		return;
+	if (strlen(fname) > MaxFileNameLen)
+		return;
+
+	if ( strncmp(fname + 8, ".BIN", 4) != 0 )
+		return;
+
+	while( IsNetworkBusy() ) {
+		ProcessNetwork();
+	}
+
+	SetTimerValue(TR_TIMER, TimeoutSndPackets);
+	while  ( !IsTimeout(TR_TIMER) ) {;}
+
+	number = strtol(fname, NULL, 16);
+
+	printf("Trying send IR code number: %u [%s\%s] ... [%u]", number, path, fname, sizeof(tmpCode));
+	if ( Open( &tmpCode, number ) )
+	{
+		uint8_t header[] = {GetDeviceAddress(), cmdReadCodes, 0, 0, 0, 0, 0, 0, 0, 0};
+		StoreUInt16(header + 2, number);
+		StoreUInt32(header + 4, tmpCode.ID);
+		StoreUInt16(header + 8, sizeof(tmpCode));
+		Answer(header, sizeof(header) / sizeof(header[0]), (uint8_t *)(&tmpCode), sizeof(tmpCode), true);
+		printf(" done\n\r");
+	} else {
+		printf("error\n\r");
+	}
+}
+
+
+void RequestReadCodes(uint8_t *buffer, size_t count)
+{
+	char path[300] = {"0:"};
+	EnumerateFiles(path, OnSendCode);
+}

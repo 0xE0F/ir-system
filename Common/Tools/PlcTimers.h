@@ -22,6 +22,8 @@
 #define SND_TIMER 4			/* Индекс таймера медленного мигания */
 #define SND_VALUE (1 / PLC_TIMER_PERIOD) /* 250 мс - интервал мигания  */
 
+#define TR_TIMER  5			/** Таймер между отправкой пакетов с кодами */
+
 /* Инициализация тамеров */
 void InitPlcTimers(void);
 

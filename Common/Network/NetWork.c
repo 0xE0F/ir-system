@@ -23,9 +23,12 @@ enum {NetWorkBufferSize = STORAGE_PAGE_SIZE + 1024 };
 //STORAGE_PAGE_SIZE + 1 + 1 + 2 + 2 + 2;			/* Размер буфера кода + заголовок команды (ADDR + CODE + PARAM + CRC16) */
 static uint8_t WorkBuffer[NetWorkBufferSize];				/* Рабочий буфер устройства */
 
-static NetworkState NetState = Receive;		/* Текущее состояние */
+static volatile NetworkState NetState = Receive;		/* Текущее состояние */
 
 static bool TransmitComplite = false;
+
+/* Передается ли что нибудь ?*/
+bool IsNetworkBusy(void) { return NetState == Transmit; }
 
 /* Состоянее драйвер отправки */
 NetworkState GetNetworkState(void) { return NetState ;}
@@ -231,7 +234,8 @@ void ProcessNetwork(void)
 					RequestSaveCode(WorkBuffer + 2, count);
 					break;
 				}
-				case cmdReadCode:
+				case cmdReadCodes:
+					RequestReadCodes(WorkBuffer+2, count);
 					break;
 
 				case cmdSendCode:
@@ -328,7 +332,19 @@ uint16_t GetUInt32(uint8_t *buf)
 	value |= ( *(buf + 2) << 16 ) & 0x00FF0000;
 
 	return value | ( ( *(buf + 3) << 24 ) & 0xFF000000 );
-
 }
 
+void StoreUInt16(uint8_t *buf, const uint16_t value)
+{
+	*buf = value & 0xFF;
+	*(buf + 1)  = (value >> 8 ) & 0xFF;
+}
+
+void StoreUInt32(uint8_t *buf, const uint32_t value)
+{
+	*buf = value & 0xFF;
+	*(buf + 1)  = (value >> 8 ) & 0xFF;
+	*(buf + 2)  = (value >> 16 ) & 0xFF;
+	*(buf + 3)  = (value >> 24 ) & 0xFF;
+}
 

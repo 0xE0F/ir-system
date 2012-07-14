@@ -20,7 +20,7 @@
 
 enum { dtScaner = 0x02, dtTransmitter = 0x01 }; /* Типы устройств */
 typedef enum { errNotEqual = 1, errBusy = 2, errFlash = 5 } Errors;
-enum { cmdDeviceType = 0x0F, cmdOnScan = 0x01, cmdOffScan = 0x02,  cmdSendCode = 0x03, cmdDeleteCode = 0x04, cmdDeleteAll = 0x05, cmdReadCode = 0x07, cmdSaveCode = 0x08, cmdError = 0x0A};
+enum { cmdDeviceType = 0x0F, cmdOnScan = 0x01, cmdOffScan = 0x02,  cmdSendCode = 0x03, cmdDeleteCode = 0x04, cmdDeleteAll = 0x05, cmdReadCodes = 0x07, cmdSaveCode = 0x08, cmdError = 0x0A};
 
 /* Параметры хранилища - только передачи или передача и хранение */
 enum {scOnlyTransmit = 1, scSaveAndTransmit = 2};
@@ -28,6 +28,9 @@ typedef enum { pmNone, pmEven, pmOdd } ParityMode;
 void InitNetWork(uint32_t baudrate, ParityMode parity, uint8_t address, uint8_t deviceType); /* Инициализация сети */
 
 void ProcessNetwork(void); /* Обработка сетевых данных */
+
+/* Передается ли что нибудь ?*/
+bool IsNetworkBusy(void);
 
 // Состояние в сети
 typedef enum  { Receive, Transmit } NetworkState;
@@ -58,25 +61,16 @@ void RequestOnScan(uint16_t id, ScanMode mode); /* Запрос на сканирование кода *
 void RequestOffScan(void);		/* Запрос на выключение сканирвоания */
 void RequestSendCode(uint8_t *buffer, size_t count);		/* Запрос на отправку кода в канал */
 
-/** Записать (добавить) ИК-код в хранилище
-a   08   k1  k2  n1   n2   n3   n4   l1   l2   [data]   c1   c2
-	a  -  адрес устройства;
-	08  - команда передачи ИК-кода в хранилище;
-	k1   k2  -  порядковый номер ИК-кода, начинается с 0;
-	n1   n2   n3   n4  -  идентификатор команды для мастер-хоста;
-	l1   l2  - длина ИК-кода;
-	[data]  - массив данных размером указанным выше размером;
-	c1   c2  -  контрольная сумма, CRC16. Вычисляется по всей длине команды.
-	В случае если команда уже присутствует в хранилище, в ответ отправляется сообщение об ошибке, см. п.5, код 6.
-*/
+
 void RequestSaveCode(uint8_t *buffer, size_t count);
-void RequestReadCode(void);			/* Запрос на чтение коад из хранилища */
-void RequestDeleteCode(void);		/* Запрос на удаление кода из хранилища */
+void RequestReadCodes(uint8_t *buffer, size_t count);			/* Запрос на чтение кодов из хранилища */
 void RequestDelateAllCodes(uint8_t *buffer, size_t count);	/* Запрос на удаление всех кодов в хранилище */
 
-/** Чтение типов из буфера */
+/** Чтение и запись типов из буфера */
 uint16_t GetUInt16(uint8_t *buf);
 uint16_t GetUInt32(uint8_t *buf);
+void StoreUInt16(uint8_t *buf, const uint16_t value);
+void StoreUInt32(uint8_t *buf, const uint32_t value);
 
 extern void NetworkLedOn(void);
 extern void NetworkLedOff(void);

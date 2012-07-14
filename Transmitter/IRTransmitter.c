@@ -73,7 +73,7 @@ static void SetNextPartOutInterval(void);
 static void InitOuputChannel(void);
 
 // Проверка текущего состояния передатчика
-volatile bool IsTransmitting() { return Transmitting; }
+volatile bool IsIrTransmitting() { return Transmitting; }
 
 static void InitCarrierTimer(void)
 {

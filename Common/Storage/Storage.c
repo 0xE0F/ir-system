@@ -175,11 +175,8 @@ void PrintStorageStatus(void)
 	}
 }
 
-/** Тип функции обратного вызова при перечеслении файлов */
-typedef void (*action_on_enum_t) (char *path, char *fname);
-
 /** Пеерчисление файлов */
-static FRESULT EnumerateFiles ( char* path, action_on_enum_t func)
+FRESULT EnumerateFiles ( char* path, action_on_enum_t func)
 {
     FRESULT res;
     FILINFO fno;

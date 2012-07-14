@@ -13,6 +13,12 @@ bool Open(IRCode *code, const uint16_t number);
 /** Очистить хранилище */
 void EraseStorage(void);
 
+/** Тип функции обратного вызова при перечеслении файлов */
+typedef void (*action_on_enum_t) (char *path, char *fname);
+
+/** Пеерчисление файлов */
+FRESULT EnumerateFiles ( char* path, action_on_enum_t func);
+
 /* ============================================= */
 // Debug fucntions
 /* ============================================= */
