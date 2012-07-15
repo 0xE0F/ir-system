@@ -26,6 +26,9 @@ static IRCode *_ScanningCode = NULL;
 static __IO uint32_t _IsScanning = 0;			// Флаг процесса сканирования
 
 static __IO uint32_t _CurrentTime = 0;			// Текущее время
+static __IO uint32_t IdleTime = 0;				// Время отсутствия изменения кода
+static const uint32_t IdleTimeMax = 250000;		// Время принудительной остановик при отсутствии кода
+
 static const uint32_t TimeToStop = 5000000; 	// Время принудительной остановки сканирования, мкс
 static const uint32_t TimeIncrement = 0xFFFF; 	// таймер включен на период в 1 мкс.
 
@@ -145,6 +148,7 @@ void Scan(IRCode *irCode)
 	SetValue(&(_ScanningCode->Intervals[_ScanningCode->IntervalsCount]), GET_IR_DATA_BIT);
 
 	_CurrentTime = 0;
+	IdleTime = 0;
 	DetectFrequency = InvalidFrequencyValue;
 	AttemptCount = 0;
 
@@ -205,7 +209,7 @@ void EXTI0_IRQHandler()
 		_ScanningCode->IntervalsCount = index;
 
 		TIM_SetCounter(TIM3, 0);
-
+		IdleTime = 0;
 		TIM_Cmd(TIM3, ENABLE);
 		_CurrentTime += timeout;
 		if ((_CurrentTime > TimeToStop) || (_ScanningCode->IntervalsCount >= INTERVALS_MAX))
@@ -217,6 +221,7 @@ void EXTI0_IRQHandler()
 	EXTI->PR = EXTI_PR_PR0;
 }
 
+/** Прерывания от таймера - счетчика времени */
 void TIM3_IRQHandler()
 {
 	if ((_ScanningCode) && (_IsScanning))
@@ -224,7 +229,8 @@ void TIM3_IRQHandler()
 		uint32_t time = GetTime(_ScanningCode->Intervals[_ScanningCode->IntervalsCount]);
 		SetTime(&(_ScanningCode->Intervals[_ScanningCode->IntervalsCount]), time + UINT16_MAX);
 		_CurrentTime += TimeIncrement;
-		if ((_CurrentTime > TimeToStop) || (_ScanningCode->IntervalsCount >= INTERVALS_MAX))
+		IdleTime += TimeIncrement;
+		if ((_CurrentTime > TimeToStop) || (_ScanningCode->IntervalsCount >= INTERVALS_MAX) || (IdleTime >= IdleTimeMax))
 		{
 			StopScan();
 		}
