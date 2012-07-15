@@ -121,7 +121,7 @@ int main(void)
 	InitTerminal(115200);
 	InitPlcTimers();
 	InitLeds();
-	InitNetWork(9600, GetJumpersValue(), dtScaner);
+	InitNetWork(9600, pmEven, GetJumpersValue(), dtScaner);
 
 	PowerLedOn();
 	IrWaitFirstCodeLedOff();
@@ -421,4 +421,8 @@ static void ProcessLeds(void)
 			break;
 	}
 }
+
+void RequestSaveCode(uint8_t *buffer, size_t count) {}
+void RequestReadCodes(uint8_t *buffer, size_t count) {}
+void RequestSendCode(uint8_t *buffer, size_t count) {}
 

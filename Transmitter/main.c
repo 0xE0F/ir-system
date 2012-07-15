@@ -138,10 +138,6 @@ int main(void)
 
 		ProcessNetwork();
 		IrProcess();
-
-		if (IsTimeoutEx(BLINK_TIMER, BLINK_VALUE)) {
-			NetworkLedInv();
-		}
 	}
 }
 
@@ -248,6 +244,7 @@ static void IrProcess(void)
 		else {
 			waitTimeout = false;
 			SetTimerValue(IR_SND_TIMER, TimeoutSndIrCodes);
+			TransmittLedOff();
 		}
 	}
 
@@ -270,6 +267,7 @@ static void IrProcess(void)
 
 			printf("done\n\rTrying to send code at channel [%u]...", (unsigned int) element.Channel);
 			StatusCode res = SendCodeToChannel(&WorkingIrCode, element.Channel);
+			TransmittLedOn();
 
 			if (res) {
 				printf("fail. Error code: %u\n\r", res);
