@@ -56,15 +56,14 @@ bool Answer(uint8_t *header, const size_t headerSize, uint8_t *msg, const size_t
 /* Ответ кодом ошибки */
 bool AnswerError(Errors error);
 
-void RequestDeviceType(void); /* Запрос типа устройства */
-void RequestOnScan(uint16_t id, ScanMode mode); /* Запрос на сканирование кода */
-void RequestOffScan(void);		/* Запрос на выключение сканирвоания */
-void RequestSendCode(uint8_t *buffer, size_t count);		/* Запрос на отправку кода в канал */
+/** Тип - функция обработки действия по сети */
+typedef void (*network_action_t)(uint8_t *buffer, const size_t count);
 
+/** Регистрация и снятие обработчиков */
+void RegisterNetworkHandler(uint8_t func, network_action_t action);
+void UnregisterNetworkHandler(uint8_t func);
 
-void RequestSaveCode(uint8_t *buffer, size_t count);
-void RequestReadCodes(uint8_t *buffer, size_t count);			/* Запрос на чтение кодов из хранилища */
-void RequestDelateAllCodes(uint8_t *buffer, size_t count);	/* Запрос на удаление всех кодов в хранилище */
+void DeviceTypeHandler(uint8_t *buffer, const size_t count); /* Запрос типа устройства */
 
 /** Чтение и запись типов из буфера */
 uint16_t GetUInt16(uint8_t *buf);

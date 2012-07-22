@@ -15,17 +15,26 @@
 
 #include <../NetWork/NetWork.h>
 
-static uint8_t DeviceAddress = 0; 							/* Адрес устройства */
 static uint8_t DeviceType;									/* Тип устройства */
+static uint8_t DeviceAddress = 0; 							/* Адрес устройства */
 
 static CircularBuffer NetworkBuffer;						/* Буфер данных устройства */
 enum {NetWorkBufferSize = STORAGE_PAGE_SIZE + 1024 };
-//STORAGE_PAGE_SIZE + 1 + 1 + 2 + 2 + 2;			/* Размер буфера кода + заголовок команды (ADDR + CODE + PARAM + CRC16) */
 static uint8_t WorkBuffer[NetWorkBufferSize];				/* Рабочий буфер устройства */
 
-static volatile NetworkState NetState = Receive;		/* Текущее состояние */
+static volatile NetworkState NetState = Receive;			/* Текущее состояние */
 
-static bool TransmitComplite = false;
+static bool TransmitComplite = false;						/* Окончание передачи */
+
+enum {NetworkHandlersMaxCount = 32 };
+static network_action_t NetworkHandlers[NetworkHandlersMaxCount];
+
+static void InitNetworkHandlers(void)
+{
+	for (size_t index = 0; index < NetworkHandlersMaxCount; ++index) {
+		NetworkHandlers[index] = NULL;
+	}
+}
 
 /* Передается ли что нибудь ?*/
 bool IsNetworkBusy(void) { return NetState == Transmit; }
@@ -133,6 +142,8 @@ void InitNetWork(uint32_t baudrate, ParityMode parity, uint8_t address, uint8_t 
 	cbInit(&NetworkBuffer, NetWorkBufferSize);
 	DeviceAddress = address;
 	DeviceType = deviceType;
+	InitNetworkHandlers();
+	RegisterNetworkHandler(cmdDeviceType, DeviceTypeHandler);
 
 	SetMode(Receive);
 }
@@ -168,6 +179,21 @@ void USART2_IRQHandler(void)
 //				SetMode(Receive);
 			}
 		}
+	}
+}
+
+/** Регистрация и снятие обработчиков */
+void RegisterNetworkHandler(uint8_t func, network_action_t action)
+{
+	if (func < NetworkHandlersMaxCount) {
+		NetworkHandlers[func] = action;
+	}
+}
+
+void UnregisterNetworkHandler(uint8_t func)
+{
+	if (func < NetworkHandlersMaxCount) {
+		NetworkHandlers[func] = NULL;
 	}
 }
 
@@ -208,48 +234,11 @@ void ProcessNetwork(void)
 			if (crc != Crc16(WorkBuffer, count, 0xFFFF))
 				return;
 
-			switch (func)
-			{
-				case cmdDeviceType:
-					RequestDeviceType();
-					break;
-
-				case cmdOnScan:
-				{
-					uint16_t id = WorkBuffer[3];
-					uint8_t mode = WorkBuffer[4];
-					id |= (WorkBuffer[2] << 8) & 0xFF00;
-					RequestOnScan(id, mode);
-					break;
+			if (func < NetworkHandlersMaxCount) {
+				network_action_t action = NetworkHandlers[func];
+				if (action != NULL) {
+					 action(WorkBuffer + 2, count);
 				}
-
-
-				case cmdOffScan:
-					RequestOffScan();
-					break;
-
-				/** a   08   k1  k2  n1   n2   n3   n4   l1   l2   [data]   c1   c2 */
-				case cmdSaveCode:
-				{
-					RequestSaveCode(WorkBuffer + 2, count);
-					break;
-				}
-				case cmdReadCodes:
-					RequestReadCodes(WorkBuffer+2, count);
-					break;
-
-				case cmdSendCode:
-					RequestSendCode(WorkBuffer + 2, count);
-					break;
-
-				case cmdDeleteCode:
-					break;
-
-				case cmdDeleteAll:
-					break;
-
-				default:
-					break;
 			}
 		}
 	}
@@ -263,7 +252,7 @@ void ProcessNetwork(void)
 }
 
 /* Запрос типа устройства */
-void RequestDeviceType(void)
+void DeviceTypeHandler(uint8_t *buffer, const size_t count)
 {
 	uint8_t answer[] = {DeviceAddress, cmdDeviceType, DeviceType};
 	Answer(answer, sizeof(answer)/sizeof(answer[0]), NULL, 0, true);

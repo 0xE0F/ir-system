@@ -36,6 +36,9 @@ static enum BlinkMode BlinkState = NoBlink;
 static void InitLeds(void);
 static void InitTerminalUART(uint32_t baudrate);
 
+void OnScanHandler(uint8_t *buffer, const size_t count); /* Обработчик команды на включение сканирования  */
+void OffScanHandler(uint8_t *buffer, const size_t count);		/* Обработчик команды на выключение сканирования */
+
 #define IR_WAIT_1_LED_PORT GPIOC
 #define IR_WAIT_2_LED_PORT GPIOD
 #define POWER_LED_PORT GPIOB
@@ -122,6 +125,8 @@ int main(void)
 	InitPlcTimers();
 	InitLeds();
 	InitNetWork(9600, pmEven, GetJumpersValue(), dtScaner);
+	RegisterNetworkHandler(cmdOnScan, OnScanHandler);
+	RegisterNetworkHandler(cmdOffScan, OffScanHandler);
 
 	PowerLedOn();
 	IrWaitFirstCodeLedOff();
@@ -335,9 +340,10 @@ void ProcessScan(void)
 }
 
 /* Запрос на сканирование кода */
-void RequestOnScan(uint16_t id, ScanMode mode)
+void OnScanHandler(uint8_t *buffer, const size_t count)
 {
-	Id = id;
+	Id = GetUInt16(buffer);
+	uint8_t mode = *(buffer+2);
 
 	switch(mode)
 	{
@@ -361,7 +367,7 @@ void RequestOnScan(uint16_t id, ScanMode mode)
 }
 
 /* Запрос на остановку сканирования */
-void RequestOffScan(void)
+void OffScanHandler(uint8_t *buffer, const size_t count)
 {
 	StopScan();
 	State = Idle;
@@ -421,8 +427,3 @@ static void ProcessLeds(void)
 			break;
 	}
 }
-
-void RequestSaveCode(uint8_t *buffer, size_t count) {}
-void RequestReadCodes(uint8_t *buffer, size_t count) {}
-void RequestSendCode(uint8_t *buffer, size_t count) {}
-

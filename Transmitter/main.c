@@ -42,6 +42,11 @@ static void InitLeds(void);
 static void InitTerminalUART(uint32_t baudrate);
 static void IrProcess(void);
 
+void SendCodeHandler(uint8_t *buffer, size_t count);	/* Обработчик команды отправки кода  */
+void SaveCodeHandler(uint8_t *buffer, size_t count);	/* Обработчик команды на сохранение кода */
+void ReadCodesHandler(uint8_t *buffer, size_t count);	/* Обработчик команды на передачу кодов из хранилища */
+void DelateAllCodesHandler(uint8_t *buffer, size_t count);	/* Запрос на удаление всех кодов в хранилище */
+
 #define ERROR_LED_PORT GPIOC
 #define TRANSMITT_LED_PORT GPIOD
 #define POWER_LED_PORT GPIOB
@@ -120,6 +125,10 @@ int main(void)
 
 	InitPlcTimers();
 	InitNetWork(9600, pmEven, GetJumpersValue(), dtTransmitter);
+	RegisterNetworkHandler(cmdSaveCode, SaveCodeHandler);
+	RegisterNetworkHandler(cmdReadCodes, ReadCodesHandler);
+	RegisterNetworkHandler(cmdSendCode, SendCodeHandler);
+	RegisterNetworkHandler(cmdDeleteAll, DelateAllCodesHandler);
 
 	if ( !InitStorage() ) {
 		while(true) {
@@ -281,12 +290,6 @@ static void IrProcess(void)
 
 }
 
-/** Запрос на сканирование кода */
-void RequestOnScan(uint16_t id, ScanMode mode) { }
-
-/** Запрос на выключение сканирвоания */
-void RequestOffScan(void) { }
-
 /** Записать (добавить) ИК-код в хранилище
 a   08   k1  k2  n1   n2   n3   n4   l1   l2   [data]   c1   c2
 	a  -  адрес устройства;
@@ -298,7 +301,7 @@ a   08   k1  k2  n1   n2   n3   n4   l1   l2   [data]   c1   c2
 	c1   c2  -  контрольная сумма, CRC16. Вычисляется по всей длине команды.
 	В случае если команда уже присутствует в хранилище, в ответ отправляется сообщение об ошибке, см. п.5, код 6.
 *//** Запрос на сохранение кода в хранилище */
-void RequestSaveCode(uint8_t *buffer, size_t count)
+void SaveCodeHandler(uint8_t *buffer, size_t count)
 {
 	if ( buffer ) {
 		uint16_t number = GetUInt16(buffer);
@@ -324,7 +327,7 @@ void RequestSaveCode(uint8_t *buffer, size_t count)
 }
 
 /** Запрос на отправку кода в канал */
-void RequestSendCode(uint8_t *buffer, size_t count)
+void SendCodeHandler(uint8_t *buffer, size_t count)
 {
 	uint16_t number = GetUInt16(buffer);
 	uint8_t channel = *(buffer + 2);
@@ -357,9 +360,11 @@ void RequestSendCode(uint8_t *buffer, size_t count)
 }
 
 /* Запрос на удаление всех кодов в хранилище */
-void RequestDelateAllCodes(uint8_t *buffer, size_t count)
+void DelateAllCodesHandler(uint8_t *buffer, size_t count)
 {
+	uint8_t header[] = {GetDeviceAddress(), cmdDeleteAll};
 	EraseStorage();
+	Answer(header, sizeof(header)/sizeof(header[0]), NULL, 0, true);
 }
 
 static size_t MaxFileNameLen = 8 + 3 + 1;
@@ -401,7 +406,7 @@ void OnSendCodeToHost(char *path, char *fname)
 }
 
 
-void RequestReadCodes(uint8_t *buffer, size_t count)
+void ReadCodesHandler(uint8_t *buffer, size_t count)
 {
 	char path[300] = {"0:"};
 	EnumerateFiles(path, OnSendCodeToHost);
