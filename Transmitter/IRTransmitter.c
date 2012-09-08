@@ -221,7 +221,6 @@ StatusCode SendCodeToChannel(IRCode *code, uint32_t channelID)
 	SetCarrierFrequency(GetFrequencyInterval(TransmittingCode->Frequency));
 	SetOutInterval(TransmittingCode->Intervals[TransmittingIndex]);
 	Transmitting = 1;
-
 	TIM_Cmd(TIM7, ENABLE);
 	NVIC_EnableIRQ(TIM7_IRQn);
 

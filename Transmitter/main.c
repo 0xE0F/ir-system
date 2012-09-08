@@ -33,7 +33,7 @@ static IrQueue irQueue;
 static const size_t IrQueueSize  = 32;
 
 uint32_t TimeoutSndPackets = 0.025 / PLC_TIMER_PERIOD;		/** ТАймаут между отправкой пакетов с кодами */
-uint32_t TimeoutSndIrCodes = 0.300 / PLC_TIMER_PERIOD;		/** Таймаут отправки ИК кодов */
+uint32_t TimeoutSndIrCodes = 0.250 / PLC_TIMER_PERIOD;		/** Таймаут отправки ИК кодов */
 
 IRCode WorkingIrCode;
 static IRCode NetworkIrCode;
@@ -254,6 +254,7 @@ static void IrProcess(void)
 			waitTimeout = false;
 			SetTimerValue(IR_SND_TIMER, TimeoutSndIrCodes);
 			TransmittLedOff();
+			return ;
 		}
 	}
 
@@ -336,7 +337,6 @@ void SendCodeHandler(uint8_t *buffer, size_t count)
 	printf("Request to send code with number: %u to channel: %u\n\rChecking ...", (unsigned int)number, (unsigned int) channel);
 	if ( Open(&NetworkIrCode, number) ) {
 		if (CheckIRCode( &NetworkIrCode ) && (channel < MaxChannelNumber ) && ( !IrQueueIsFull(&irQueue) )) {
-
 			ElemType element;
 			element.Number = number;
 			element.Channel = channel;
